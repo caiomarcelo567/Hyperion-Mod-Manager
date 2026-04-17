@@ -1,6 +1,6 @@
 {
   "name": "hyperion",
-  "version": "0.5.9",
+  "version": "0.5.10",
   "description": "Cyberpunk 2077 Mod Manager",
   "main": "out/main/index.js",
   "scripts": {
@@ -16,7 +16,12 @@
     "release:minor": "npm version minor -m \"release: %s\"",
     "release:major": "npm version major -m \"release: %s\""
   },
-  "keywords": ["cyberpunk", "mod", "manager", "electron"],
+  "keywords": [
+    "cyberpunk",
+    "mod",
+    "manager",
+    "electron"
+  ],
   "author": "",
   "devDependencies": {
     "@types/adm-zip": "^0.5.5",
@@ -62,13 +67,22 @@
       {
         "from": "src/main/resources",
         "to": "resources",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       }
     ],
     "win": {
       "icon": "build/icon.ico",
       "requestedExecutionLevel": "asInvoker",
-      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "artifactName": "${productName}-${version}.${ext}"
     },
     "nsis": {
