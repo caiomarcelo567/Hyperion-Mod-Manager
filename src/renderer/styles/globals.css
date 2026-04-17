@@ -213,6 +213,10 @@ select,
   background: rgba(122, 114, 62, 0.95);
 }
 
+.stable-scroll-gutter {
+  scrollbar-gutter: stable;
+}
+
 .managed-mods-scroll {
   contain: layout paint;
   will-change: scroll-position;

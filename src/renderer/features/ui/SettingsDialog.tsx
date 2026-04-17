@@ -162,7 +162,7 @@ export const SettingsPage: React.FC = () => {
   }`
 
   return (
-    <div className="h-full overflow-y-auto hyperion-scrollbar pb-16 animate-settings-in">
+    <div className="h-full overflow-y-auto hyperion-scrollbar stable-scroll-gutter pb-16 animate-settings-in">
       <div className="max-w-5xl mx-auto px-10 py-12">
 
         {/* Page header */}
