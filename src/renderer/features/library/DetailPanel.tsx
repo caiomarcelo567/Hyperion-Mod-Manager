@@ -45,7 +45,7 @@ const formatSize = (bytes?: number): string => {
 
 const DetailItem: React.FC<{ label: string; value: string }> = ({ label, value }) => (
   <div className="border-[0.5px] border-[#1a1a1a] bg-[#090909] px-4 py-3">
-    <div className="mb-2 text-[9px] uppercase tracking-[0.2em] text-[#555] brand-font font-bold">{label}</div>
+    <div className="mb-2 text-[9px] uppercase tracking-[0.2em] text-[#8a8a8a] brand-font font-bold">{label}</div>
     <div className="break-words text-sm font-mono text-[#e5e2e1]">{value}</div>
   </div>
 )
@@ -118,7 +118,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
 
         <div className="flex items-start justify-between gap-6 border-b-[0.5px] border-[#1a1a1a] bg-[#070707] px-6 py-5">
           <div className="min-w-0 flex-1">
-            <div className="mb-2 text-[10px] uppercase tracking-[0.22em] text-[#555] brand-font font-bold">Mod Details</div>
+            <div className="mb-2 text-[10px] uppercase tracking-[0.22em] text-[#8a8a8a] brand-font font-bold">Mod Details</div>
             {editingName ? (
               <div className="flex items-center gap-3">
                 <input
@@ -132,7 +132,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
                       setEditingName(false)
                     }
                   }}
-                  className="w-full max-w-xl border-[0.5px] border-[#333] bg-[#0a0a0a] px-4 py-2 text-white font-medium tracking-tight focus:border-[#fcee09]/60 focus:shadow-[0_0_10px_rgba(252,238,9,0.12)] focus:outline-none"
+                  className="w-full max-w-xl border-[0.5px] border-[#7a7a7a] bg-[#0a0a0a] px-4 py-2 text-white font-medium tracking-tight focus:border-[#fcee09]/60 focus:shadow-[0_0_10px_rgba(252,238,9,0.12)] focus:outline-none"
                 />
                 <button
                   onClick={() => void handleSaveName()}
@@ -144,7 +144,7 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
             ) : (
               <h2 className="truncate brand-font text-2xl font-bold uppercase tracking-[0.04em] text-white">{mod.name}</h2>
             )}
-            <p className="mt-3 text-[11px] font-mono uppercase tracking-[0.14em] text-[#666]">
+            <p className="mt-3 text-[11px] font-mono uppercase tracking-[0.14em] text-[#8a8a8a]">
               {mod.folderName ?? mod.uuid} • {visibleFiles.length} files indexed
             </p>
           </div>
@@ -152,28 +152,28 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={() => setEditingName((value) => !value)}
-              className="flex h-10 w-10 items-center justify-center border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#777] hover:border-[#fcee09]/50 hover:text-[#fcee09] hover:shadow-[0_0_10px_rgba(252,238,9,0.1)] transition-all"
+              className="flex h-10 w-10 items-center justify-center border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#8a8a8a] hover:border-[#fcee09]/50 hover:text-[#fcee09] hover:shadow-[0_0_10px_rgba(252,238,9,0.1)] transition-all"
               title="Rename mod"
             >
               <span className="material-symbols-outlined text-[18px]">edit</span>
             </button>
             <button
               onClick={handleOpenFolder}
-              className="flex h-10 w-10 items-center justify-center border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#777] hover:border-[#fcee09]/50 hover:text-[#fcee09] hover:shadow-[0_0_10px_rgba(252,238,9,0.1)] transition-all"
+              className="flex h-10 w-10 items-center justify-center border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#8a8a8a] hover:border-[#fcee09]/50 hover:text-[#fcee09] hover:shadow-[0_0_10px_rgba(252,238,9,0.1)] transition-all"
               title="Open mod folder"
             >
               <span className="material-symbols-outlined text-[18px]">folder_open</span>
             </button>
             <button
               onClick={() => onDeleteRequest(mod)}
-              className="flex h-10 w-10 items-center justify-center border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#777] hover:border-[#ff4d4f]/50 hover:text-[#ff4d4f] hover:shadow-[0_0_10px_rgba(255,77,79,0.12)] transition-all"
+              className="flex h-10 w-10 items-center justify-center border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#8a8a8a] hover:border-[#ff4d4f]/50 hover:text-[#ff4d4f] hover:shadow-[0_0_10px_rgba(255,77,79,0.12)] transition-all"
               title="Remove mod"
             >
               <span className="material-symbols-outlined text-[18px]">delete</span>
             </button>
             <button
               onClick={onClose}
-              className="flex h-10 w-10 items-center justify-center border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#777] hover:border-white/20 hover:text-white transition-all"
+              className="flex h-10 w-10 items-center justify-center border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#8a8a8a] hover:border-white/20 hover:text-white transition-all"
               title="Close details"
             >
               <span className="material-symbols-outlined text-[18px]">close</span>
@@ -195,26 +195,26 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
             </div>
 
             <div className="border-[0.5px] border-[#1a1a1a] bg-[#070707] p-4">
-              <div className="mb-3 text-[9px] uppercase tracking-[0.2em] text-[#555] brand-font font-bold">Source Path</div>
-              <div className="break-all text-[12px] font-mono text-[#888]">{mod.sourcePath ?? 'No original source recorded for this mod'}</div>
+              <div className="mb-3 text-[9px] uppercase tracking-[0.2em] text-[#8a8a8a] brand-font font-bold">Source Path</div>
+              <div className="break-all text-[12px] font-mono text-[#9a9a9a]">{mod.sourcePath ?? 'No original source recorded for this mod'}</div>
             </div>
           </div>
 
           <div className="overflow-hidden border-[0.5px] border-[#1a1a1a] bg-[#070707]">
             <div className="flex items-center justify-between border-b-[0.5px] border-[#1a1a1a] bg-[#0a0a0a] px-4 py-3">
-              <div className="text-[9px] uppercase tracking-[0.2em] text-[#555] brand-font font-bold">Indexed Files</div>
-              <div className="text-[10px] font-mono text-[#666]">{visibleFiles.length}</div>
+              <div className="text-[9px] uppercase tracking-[0.2em] text-[#8a8a8a] brand-font font-bold">Indexed Files</div>
+              <div className="text-[10px] font-mono text-[#8a8a8a]">{visibleFiles.length}</div>
             </div>
             <div className="max-h-[420px] space-y-2 overflow-y-auto px-4 py-3">
               {visibleFiles.length > 0 ? visibleFiles.map((file) => (
                 <div
                   key={file}
-                  className="border-[0.5px] border-[#141414] bg-[#060606] px-3 py-2 text-[11px] font-mono text-[#777] hover:border-[#222] hover:text-[#aaa] transition-colors"
+                  className="border-[0.5px] border-[#141414] bg-[#060606] px-3 py-2 text-[11px] font-mono text-[#8a8a8a] hover:border-[#222] hover:text-[#c0c0c0] transition-colors"
                 >
                   {file}
                 </div>
               )) : (
-                <div className="py-12 text-center text-[11px] font-mono uppercase tracking-[0.18em] text-[#444]">
+                <div className="py-12 text-center text-[11px] font-mono uppercase tracking-[0.18em] text-[#7a7a7a]">
                   No indexed files available
                 </div>
               )}

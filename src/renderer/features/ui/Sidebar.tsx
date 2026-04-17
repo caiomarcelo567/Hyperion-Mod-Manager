@@ -30,12 +30,12 @@ export const Sidebar: React.FC = () => {
     active
       ? 'text-[#fcee09] bg-[#0a0a0a] before:absolute before:left-0 before:w-[2px] before:h-8 before:bg-[#fcee09] before:top-1/2 before:-translate-y-1/2'
       : disabled
-        ? 'text-[#555]'
-        : 'text-[#555] hover:text-white hover:bg-[#0a0a0a]'
+        ? 'text-[#7f7f7f]'
+        : 'text-[#7f7f7f] hover:text-white hover:bg-[#0a0a0a]'
   }`
 
   const labelClass = (active?: boolean, disabled?: boolean) => `ml-4 whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover/sidebar:opacity-100 tracking-wider ${
-    active ? 'text-[#fcee09]' : disabled ? 'text-[#6a6a6a]' : ''
+    active ? 'text-[#fcee09]' : disabled ? 'text-[#8a8a8a]' : ''
   }`
 
   const handleLaunchGame = async () => {
@@ -99,7 +99,7 @@ export const Sidebar: React.FC = () => {
           disabled={!settings?.gamePath || !gamePathValid}
           className={`w-full overflow-hidden rounded-sm px-2 py-3 text-xs font-bold tracking-widest whitespace-nowrap transition-all duration-300 ${
             !settings?.gamePath || !gamePathValid
-              ? 'bg-[#262626] text-[#666] cursor-not-allowed'
+              ? 'bg-[#262626] text-[#8a8a8a] cursor-not-allowed'
               : 'bg-[#fcee09] text-[#050505] hover:bg-white shadow-[0_0_20px_rgba(252,238,9,0.15)]'
           }`}
           title="Launch Game"

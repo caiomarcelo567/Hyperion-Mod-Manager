@@ -21,8 +21,8 @@ export const theme = createTheme({
     },
     text: {
       primary: '#F2F2F2',
-      secondary: 'rgba(242,242,242,0.55)',
-      disabled: 'rgba(242,242,242,0.28)'
+      secondary: 'rgba(242,242,242,0.72)',
+      disabled: 'rgba(242,242,242,0.46)'
     },
     divider: 'rgba(255,255,255,0.06)',
     error:   { main: '#F87171' },

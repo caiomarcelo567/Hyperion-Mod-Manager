@@ -83,7 +83,7 @@ export const ModRow: React.FC<ModRowProps> = ({
         className="flex items-center gap-4 px-6 py-2 cursor-pointer border-b-[0.5px] border-[#1a1a1a] hover:bg-[#0a0a0a] transition-colors"
       >
         <div className="flex-1 h-px bg-[#1a1a1a]" />
-        <span className="text-[10px] brand-font font-bold text-[#555] uppercase tracking-widest whitespace-nowrap flex-shrink-0">
+        <span className="text-[10px] brand-font font-bold text-[#8a8a8a] uppercase tracking-widest whitespace-nowrap flex-shrink-0">
           {mod.name}
         </span>
         <div className="flex-1 h-px bg-[#1a1a1a]" />
@@ -130,13 +130,13 @@ export const ModRow: React.FC<ModRowProps> = ({
             className={`absolute top-1/2 h-[12px] w-[12px] -translate-y-1/2 rounded-full ${
               mod.enabled
                 ? 'right-[1px] bg-[#fcee09]'
-                : 'left-[1px] bg-[#444]'
+                : 'left-[1px] bg-[#7a7a7a]'
             }`}
           />
         </div>
       </div>
 
-      <div className="flex items-center text-[#444] text-[11px] font-mono group-hover:text-[#666] transition-colors">
+      <div className="flex items-center text-[#7a7a7a] text-[11px] font-mono group-hover:text-[#9a9a9a] transition-colors">
         {index}
       </div>
 
@@ -157,7 +157,7 @@ export const ModRow: React.FC<ModRowProps> = ({
         ) : (
           <span
             className={`font-medium tracking-tight truncate transition-colors ${
-              mod.enabled ? 'text-[#e5e2e1] group-hover:text-white' : 'text-[#666] line-through group-hover:text-[#888]'
+              mod.enabled ? 'text-[#e5e2e1] group-hover:text-white' : 'text-[#8a8a8a] line-through group-hover:text-[#9a9a9a]'
             }`}
           >
             {mod.name}
@@ -165,7 +165,7 @@ export const ModRow: React.FC<ModRowProps> = ({
         )}
       </div>
 
-      <div className={`flex items-center text-[11px] font-mono tracking-tight ${mod.enabled ? 'text-[#888]' : 'text-[#555]'}`}>
+      <div className={`flex items-center text-[11px] font-mono tracking-tight ${mod.enabled ? 'text-[#9a9a9a]' : 'text-[#8a8a8a]'}`}>
         {mod.version ?? '—'}
       </div>
 
@@ -174,13 +174,13 @@ export const ModRow: React.FC<ModRowProps> = ({
           className={`px-2 py-[2px] border-[0.5px] text-[9px] uppercase tracking-widest rounded-sm ${
             mod.enabled ? 'bg-[#111] border-[#222]' : 'bg-[#050505] border-[#222]'
           }`}
-          style={{ color: mod.enabled ? color : '#555' }}
+          style={{ color: mod.enabled ? color : '#8a8a8a' }}
         >
           {label}
         </span>
       </div>
 
-      <div className={`flex items-center text-[10px] font-mono tracking-tight ${mod.enabled ? 'text-[#555]' : 'text-[#555]'}`}>
+      <div className={`flex items-center text-[10px] font-mono tracking-tight ${mod.enabled ? 'text-[#8a8a8a]' : 'text-[#8a8a8a]'}`}>
         {mod.enabled ? formatDate(mod.installedAt) : '---'}
       </div>
 
@@ -202,7 +202,7 @@ export const ModRow: React.FC<ModRowProps> = ({
                 event.stopPropagation()
                 onRenameCancel()
               }}
-              className="flex h-8 w-8 items-center justify-center rounded-sm border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#888] hover:border-[#555] hover:text-white transition-all"
+              className="flex h-8 w-8 items-center justify-center rounded-sm border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#9a9a9a] hover:border-[#8a8a8a] hover:text-white transition-all"
               title="Cancel rename"
             >
               <span className="material-symbols-outlined text-[15px]">close</span>
@@ -215,7 +215,7 @@ export const ModRow: React.FC<ModRowProps> = ({
                 event.stopPropagation()
                 onRename(mod)
               }}
-              className="flex h-8 w-8 items-center justify-center rounded-sm border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#666] hover:border-[#fcee09]/45 hover:text-[#fcee09] transition-all"
+              className="flex h-8 w-8 items-center justify-center rounded-sm border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#8a8a8a] hover:border-[#fcee09]/45 hover:text-[#fcee09] transition-all"
               title="Rename mod"
             >
               <span className="material-symbols-outlined text-[15px]">edit</span>
@@ -225,7 +225,7 @@ export const ModRow: React.FC<ModRowProps> = ({
                 event.stopPropagation()
                 onDelete(mod)
               }}
-              className="flex h-8 w-8 items-center justify-center rounded-sm border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#666] hover:border-[#ff4d4f]/45 hover:text-[#ff4d4f] transition-all"
+              className="flex h-8 w-8 items-center justify-center rounded-sm border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#8a8a8a] hover:border-[#ff4d4f]/45 hover:text-[#ff4d4f] transition-all"
               title="Remove mod"
             >
               <span className="material-symbols-outlined text-[15px]">delete</span>

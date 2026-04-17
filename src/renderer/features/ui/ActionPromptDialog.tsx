@@ -48,9 +48,9 @@ export const ActionPromptDialog: React.FC<ActionPromptDialogProps> = ({
           <h2 className="brand-font text-xl font-bold tracking-tighter uppercase">{title}</h2>
         </div>
 
-        <p className="text-[#888] text-sm leading-relaxed mb-3">{description}</p>
+        <p className="text-[#9a9a9a] text-sm leading-relaxed mb-3">{description}</p>
         {detailLabel && detailValue && (
-          <p className="text-[#666] text-[11px] font-mono uppercase tracking-[0.18em] mb-8">
+          <p className="text-[#8a8a8a] text-[11px] font-mono uppercase tracking-[0.18em] mb-8">
             {detailLabel}: {detailValue}
           </p>
         )}
@@ -72,7 +72,7 @@ export const ActionPromptDialog: React.FC<ActionPromptDialogProps> = ({
             <button
               onClick={onSecondary}
               disabled={submitting}
-                className="w-full bg-[#0a0a0a] border-[0.5px] border-[#333] text-white font-bold py-3 text-xs tracking-widest uppercase rounded-sm disabled:opacity-60 hover:border-[#555] hover:bg-[#111] hover:shadow-[0_0_12px_rgba(255,255,255,0.05)] transition-all"
+                className="w-full bg-[#0a0a0a] border-[0.5px] border-[#7a7a7a] text-white font-bold py-3 text-xs tracking-widest uppercase rounded-sm disabled:opacity-60 hover:border-[#9a9a9a] hover:bg-[#111] hover:shadow-[0_0_12px_rgba(255,255,255,0.05)] transition-all"
               style={{ '--hover-color': accentColor } as React.CSSProperties}
             >
               {secondaryLabel}
@@ -81,7 +81,7 @@ export const ActionPromptDialog: React.FC<ActionPromptDialogProps> = ({
           <button
             onClick={onCancel}
             disabled={submitting}
-            className="w-full border-[0.5px] border-transparent text-[#555] hover:text-white hover:border-[#222] hover:bg-[#0a0a0a] py-2 text-[10px] font-bold tracking-widest uppercase transition-all mt-2 disabled:opacity-60 rounded-sm"
+            className="w-full border-[0.5px] border-transparent text-[#8a8a8a] hover:text-white hover:border-[#222] hover:bg-[#0a0a0a] py-2 text-[10px] font-bold tracking-widest uppercase transition-all mt-2 disabled:opacity-60 rounded-sm"
           >
             {cancelLabel}
           </button>

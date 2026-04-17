@@ -27,8 +27,8 @@ export const Header: React.FC = () => {
   } = useAppStore()
   const [autoApplyUpdate, setAutoApplyUpdate] = useState(false)
 
-  const chromeButtonClass = 'flex h-8 w-8 items-center justify-center rounded-sm text-[#555] transition-colors hover:bg-[#111] hover:text-white'
-  const utilityButtonClass = 'flex h-8 w-8 items-center justify-center rounded-sm text-[#555] transition-colors hover:bg-[#111] hover:text-white disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-[#555]'
+  const chromeButtonClass = 'flex h-8 w-8 items-center justify-center rounded-sm text-[#7f7f7f] transition-colors hover:bg-[#111] hover:text-white'
+  const utilityButtonClass = 'flex h-8 w-8 items-center justify-center rounded-sm text-[#7f7f7f] transition-colors hover:bg-[#111] hover:text-white disabled:opacity-60 disabled:hover:bg-transparent disabled:hover:text-[#7f7f7f]'
   const showLibraryTools = activeView === 'library' && Boolean(settings?.gamePath?.trim() && settings?.libraryPath?.trim() && gamePathValid && libraryPathValid)
   const libraryModCount = totalCount()
   const nextLibraryFilter: Record<LibraryStatusFilter, LibraryStatusFilter> = {
@@ -118,9 +118,9 @@ export const Header: React.FC = () => {
           </span>
         </div>
         <div className="relative flex items-center w-96 ml-8">
-          <span className="material-symbols-outlined absolute left-3 text-[#888] text-[18px]">search</span>
+          <span className="material-symbols-outlined absolute left-3 text-[#9a9a9a] text-[18px]">search</span>
           <input
-            className="w-full bg-[#0a0a0a] border-[0.5px] border-[#1a1a1a] rounded-sm py-1.5 pl-9 pr-4 text-sm focus:ring-[0.5px] focus:ring-[#fcee09] focus:border-[#fcee09] focus:outline-none text-[#e5e2e1] placeholder-[#555] transition-all focus:shadow-[0_0_10px_rgba(252,238,9,0.1)]"
+            className="w-full bg-[#0a0a0a] border-[0.5px] border-[#1a1a1a] rounded-sm py-1.5 pl-9 pr-4 text-sm focus:ring-[0.5px] focus:ring-[#fcee09] focus:border-[#fcee09] focus:outline-none text-[#e5e2e1] placeholder-[#7f7f7f] transition-all focus:shadow-[0_0_10px_rgba(252,238,9,0.1)]"
             placeholder="Search mods..."
             type="text"
             value={filter}
@@ -185,7 +185,7 @@ export const Header: React.FC = () => {
         )}
 
         {updateError && !updateAvailable && (
-          <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-[#7a7a7a]">
+          <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-[#8a8a8a]">
             Update check failed
           </div>
         )}
@@ -216,7 +216,7 @@ export const Header: React.FC = () => {
             <span className="material-symbols-outlined text-[18px]">check_box_outline_blank</span>
           </button>
           <button
-            className="flex h-8 w-8 items-center justify-center rounded-sm text-[#555] transition-colors hover:bg-[#111] hover:text-[#F87171]"
+            className="flex h-8 w-8 items-center justify-center rounded-sm text-[#7f7f7f] transition-colors hover:bg-[#111] hover:text-[#F87171]"
             onClick={() => IpcService.send('window:close')}
             title="Close"
           >

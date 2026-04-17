@@ -40,7 +40,7 @@ export const StatusBar: React.FC = () => {
         <Box component="span" sx={{
           fontSize: '0.72rem',
           fontFamily: '"DM Sans", sans-serif',
-          color: 'rgba(242,242,242,0.4)',
+          color: 'rgba(242,242,242,0.58)',
           whiteSpace: 'nowrap',
           overflow: 'hidden',
           textOverflow: 'ellipsis'
@@ -55,7 +55,7 @@ export const StatusBar: React.FC = () => {
       <Box component="span" sx={{
         fontSize: '0.72rem',
         fontFamily: '"DM Sans", sans-serif',
-        color: 'rgba(242,242,242,0.22)',
+        color: 'rgba(242,242,242,0.5)',
         whiteSpace: 'nowrap',
         flexShrink: 0
       }}>

@@ -135,14 +135,14 @@ export const DownloadsPane: React.FC = () => {
         <div className="flex items-end justify-between mb-6 gap-6">
           <div>
             <h1 className="brand-font text-xl font-bold tracking-[0.18em] uppercase text-white">Downloads</h1>
-            <p className="mt-2 text-[11px] text-[#666] font-mono tracking-[0.15em] uppercase">
+            <p className="mt-2 text-[11px] text-[#8a8a8a] font-mono tracking-[0.15em] uppercase">
               Indexed from the configured downloads path
             </p>
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={refreshDownloads}
-              className="px-4 py-2 bg-[#0a0a0a] border-[0.5px] border-[#1a1a1a] text-[#888] rounded-sm text-[10px] brand-font font-semibold uppercase tracking-widest hover:text-white hover:border-[#333] transition-colors"
+              className="px-4 py-2 bg-[#0a0a0a] border-[0.5px] border-[#1a1a1a] text-[#9a9a9a] rounded-sm text-[10px] brand-font font-semibold uppercase tracking-widest hover:text-white hover:border-[#7a7a7a] transition-colors"
             >
               Refresh
             </button>
@@ -158,20 +158,20 @@ export const DownloadsPane: React.FC = () => {
         <div className="mb-6 border-[0.5px] border-[#1a1a1a] bg-[#070707] shadow-[0_4px_14px_rgba(0,0,0,0.22)]">
           <div className="grid grid-cols-[minmax(0,1fr)_120px_120px_auto] gap-4 px-5 py-4 items-center">
             <div className="min-w-0">
-              <div className="text-[9px] uppercase tracking-widest text-[#555] brand-font font-bold mb-2">Downloads Path</div>
+              <div className="text-[9px] uppercase tracking-widest text-[#8a8a8a] brand-font font-bold mb-2">Downloads Path</div>
               <div className="text-[#e5e2e1] text-sm truncate">{settings?.downloadPath || 'Not configured'}</div>
             </div>
             <div className="border-[0.5px] border-[#1a1a1a] bg-[#0a0a0a] px-4 py-3">
-              <div className="text-[9px] uppercase tracking-widest text-[#555] brand-font font-bold mb-2">Files</div>
+              <div className="text-[9px] uppercase tracking-widest text-[#8a8a8a] brand-font font-bold mb-2">Files</div>
               <div className="text-xl text-white font-semibold">{downloads.length}</div>
             </div>
             <div className="border-[0.5px] border-[#1a1a1a] bg-[#0a0a0a] px-4 py-3">
-              <div className="text-[9px] uppercase tracking-widest text-[#555] brand-font font-bold mb-2">Zip Ready</div>
+              <div className="text-[9px] uppercase tracking-widest text-[#8a8a8a] brand-font font-bold mb-2">Zip Ready</div>
               <div className="text-xl text-[#fcee09] font-semibold">{downloads.filter((entry) => entry.extension === '.zip').length}</div>
             </div>
             <button
               onClick={() => setActiveView('settings')}
-              className="px-4 py-2 bg-[#0a0a0a] border-[0.5px] border-[#1a1a1a] text-[#888] rounded-sm text-[10px] brand-font font-semibold uppercase tracking-widest hover:text-white hover:border-[#333] transition-colors justify-self-end"
+              className="px-4 py-2 bg-[#0a0a0a] border-[0.5px] border-[#1a1a1a] text-[#9a9a9a] rounded-sm text-[10px] brand-font font-semibold uppercase tracking-widest hover:text-white hover:border-[#7a7a7a] transition-colors justify-self-end"
             >
               Configure Paths
             </button>
@@ -180,18 +180,18 @@ export const DownloadsPane: React.FC = () => {
 
         <div className="border-[0.5px] border-[#1a1a1a] bg-[#050505] overflow-hidden shadow-[0_6px_18px_rgba(0,0,0,0.24)]">
           <div className="grid grid-cols-[minmax(340px,1fr)_110px_140px_200px] gap-4 px-5 py-3 border-b-[0.5px] border-[#1a1a1a] bg-[#0a0a0a]">
-              <span className="text-[9px] uppercase tracking-widest text-[#555] brand-font font-bold">Name</span>
-              <span className="text-[9px] uppercase tracking-widest text-[#555] brand-font font-bold">Format</span>
-              <span className="text-[9px] uppercase tracking-widest text-[#555] brand-font font-bold">Modified</span>
-              <span className="text-[9px] uppercase tracking-widest text-[#555] brand-font font-bold text-left">Actions</span>
+              <span className="text-[9px] uppercase tracking-widest text-[#8a8a8a] brand-font font-bold">Name</span>
+              <span className="text-[9px] uppercase tracking-widest text-[#8a8a8a] brand-font font-bold">Format</span>
+              <span className="text-[9px] uppercase tracking-widest text-[#8a8a8a] brand-font font-bold">Modified</span>
+              <span className="text-[9px] uppercase tracking-widest text-[#8a8a8a] brand-font font-bold text-left">Actions</span>
           </div>
 
           {loading ? (
-            <div className="flex items-center justify-center py-24 text-[#555] font-mono text-sm">Scanning downloads...</div>
+            <div className="flex items-center justify-center py-24 text-[#8a8a8a] font-mono text-sm">Scanning downloads...</div>
           ) : latestDownloads.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 gap-4 px-8 text-center">
-              <span className="material-symbols-outlined text-[48px] text-[#333]">download</span>
-              <div className="text-[#777] text-sm font-mono tracking-tight">
+              <span className="material-symbols-outlined text-[48px] text-[#7a7a7a]">download</span>
+              <div className="text-[#8a8a8a] text-sm font-mono tracking-tight">
                 {settings?.downloadPath ? 'No archives found in the downloads folder' : 'Set a downloads path in Configuration first'}
               </div>
             </div>
@@ -207,17 +207,17 @@ export const DownloadsPane: React.FC = () => {
                   >
                     <div className="min-w-0">
                       <div className="truncate text-[#e5e2e1] text-sm">{entry.name}</div>
-                      <div className="mt-1 text-[#555] text-[11px] font-mono">{formatSize(entry.size)}</div>
+                      <div className="mt-1 text-[#8a8a8a] text-[11px] font-mono">{formatSize(entry.size)}</div>
                     </div>
-                    <div className="flex items-center text-[#888] text-[11px] font-mono uppercase">{entry.extension.replace('.', '')}</div>
-                    <div className="flex items-center text-[#666] text-[11px] font-mono">{formatDate(entry.modifiedAt)}</div>
+                    <div className="flex items-center text-[#9a9a9a] text-[11px] font-mono uppercase">{entry.extension.replace('.', '')}</div>
+                    <div className="flex items-center text-[#8a8a8a] text-[11px] font-mono">{formatDate(entry.modifiedAt)}</div>
                     <div className="flex items-center justify-end gap-2">
                       <button
                         onClick={() => handleInstall(entry)}
                         disabled={isInstalling}
                         className={`group px-3 py-1.5 rounded-sm text-[10px] brand-font font-bold uppercase tracking-widest transition-all disabled:opacity-50 ${
                           installedMod
-                            ? 'bg-[#0a0a0a] border-[0.5px] border-[#333] text-white hover:border-[#fcee09] hover:text-[#fcee09]'
+                            ? 'bg-[#0a0a0a] border-[0.5px] border-[#7a7a7a] text-white hover:border-[#fcee09] hover:text-[#fcee09]'
                             : 'bg-[#0a0a0a] border-[0.5px] border-[#fcee09]/40 text-[#fcee09] hover:bg-[#fcee09] hover:text-[#050505]'
                         } disabled:hover:bg-[#0a0a0a] disabled:hover:text-[#fcee09]`}
                       >
@@ -234,7 +234,7 @@ export const DownloadsPane: React.FC = () => {
                       </button>
                       <button
                         onClick={() => setPendingDeleteDownload(entry)}
-                        className="ml-auto flex h-8 w-8 items-center justify-center rounded-sm border-[0.5px] border-[#222] text-[#666] hover:border-[#ff4d4f]/50 hover:text-[#ff4d4f] transition-colors"
+                        className="ml-auto flex h-8 w-8 items-center justify-center rounded-sm border-[0.5px] border-[#222] text-[#8a8a8a] hover:border-[#ff4d4f]/50 hover:text-[#ff4d4f] transition-colors"
                         title="Delete download"
                       >
                         <span className="material-symbols-outlined text-[16px]">delete</span>

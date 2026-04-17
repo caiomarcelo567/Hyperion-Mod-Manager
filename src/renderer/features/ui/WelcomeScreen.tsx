@@ -115,7 +115,7 @@ export const WelcomeScreen: React.FC = () => {
             <h1 className="screen-title-font text-[1.22rem] font-semibold uppercase tracking-[0.2em] text-white">
               Configure Required Paths
             </h1>
-            <p className="mt-3 max-w-3xl text-[12px] font-mono uppercase tracking-[0.12em] text-[#666]">
+            <p className="mt-3 max-w-3xl text-[12px] font-mono uppercase tracking-[0.12em] text-[#8a8a8a]">
               Hyperion needs the Cyberpunk 2077 game folder and a mod library before mod installation can be enabled.
             </p>
           </div>
@@ -125,7 +125,7 @@ export const WelcomeScreen: React.FC = () => {
               <div className="border-[0.5px] border-[#1a1a1a] bg-[#070707] p-5">
                 <div className="mb-4 flex items-center justify-between gap-4">
                   <div>
-                    <div className="text-[9px] uppercase tracking-[0.2em] text-[#555] brand-font font-bold">Game Path</div>
+                    <div className="text-[9px] uppercase tracking-[0.2em] text-[#8a8a8a] brand-font font-bold">Game Path</div>
                     <div className="mt-2 text-sm text-[#e5e2e1]">{missingGame ? 'Not configured' : gamePath}</div>
                   </div>
                   <span className={`text-[10px] font-mono uppercase tracking-[0.18em] ${missingGame ? 'text-[#fcee09]' : 'text-[#6fe3b1]'}`}>
@@ -136,14 +136,14 @@ export const WelcomeScreen: React.FC = () => {
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={browseGame}
-                    className="px-4 py-2 bg-[#0a0a0a] border-[0.5px] border-[#1a1a1a] text-[#888] rounded-sm text-[10px] brand-font font-semibold uppercase tracking-widest hover:text-white hover:border-[#333] transition-colors"
+                    className="px-4 py-2 bg-[#0a0a0a] border-[0.5px] border-[#1a1a1a] text-[#9a9a9a] rounded-sm text-[10px] brand-font font-semibold uppercase tracking-widest hover:text-white hover:border-[#7a7a7a] transition-colors"
                   >
                     Browse Game Path
                   </button>
                   <button
                     onClick={() => void autoDetect()}
                     disabled={detectingGame}
-                    className="px-4 py-2 bg-[#0a0a0a] border-[0.5px] border-[#1a1a1a] text-[#888] rounded-sm text-[10px] brand-font font-semibold uppercase tracking-widest hover:text-[#fcee09] hover:border-[#fcee09]/35 transition-colors disabled:opacity-50"
+                    className="px-4 py-2 bg-[#0a0a0a] border-[0.5px] border-[#1a1a1a] text-[#9a9a9a] rounded-sm text-[10px] brand-font font-semibold uppercase tracking-widest hover:text-[#fcee09] hover:border-[#fcee09]/35 transition-colors disabled:opacity-60"
                   >
                     {detectingGame ? 'Detecting' : 'Auto Detect'}
                   </button>
@@ -153,7 +153,7 @@ export const WelcomeScreen: React.FC = () => {
               <div className="border-[0.5px] border-[#1a1a1a] bg-[#070707] p-5">
                 <div className="mb-4 flex items-center justify-between gap-4">
                   <div>
-                    <div className="text-[9px] uppercase tracking-[0.2em] text-[#555] brand-font font-bold">Mod Library</div>
+                    <div className="text-[9px] uppercase tracking-[0.2em] text-[#8a8a8a] brand-font font-bold">Mod Library</div>
                     <div className="mt-2 text-sm text-[#e5e2e1]">{missingLibrary ? 'Not configured' : libraryPath}</div>
                   </div>
                   <span className={`text-[10px] font-mono uppercase tracking-[0.18em] ${missingLibrary ? 'text-[#fcee09]' : 'text-[#6fe3b1]'}`}>
@@ -163,7 +163,7 @@ export const WelcomeScreen: React.FC = () => {
 
                 <button
                   onClick={browseLibrary}
-                  className="px-4 py-2 bg-[#0a0a0a] border-[0.5px] border-[#1a1a1a] text-[#888] rounded-sm text-[10px] brand-font font-semibold uppercase tracking-widest hover:text-white hover:border-[#333] transition-colors"
+                  className="px-4 py-2 bg-[#0a0a0a] border-[0.5px] border-[#1a1a1a] text-[#9a9a9a] rounded-sm text-[10px] brand-font font-semibold uppercase tracking-widest hover:text-white hover:border-[#7a7a7a] transition-colors"
                 >
                   Browse Mod Library
                 </button>
@@ -171,7 +171,7 @@ export const WelcomeScreen: React.FC = () => {
             </div>
 
             <div className="border-[0.5px] border-[#1a1a1a] bg-[#070707] p-5">
-              <div className="mb-4 text-[9px] uppercase tracking-[0.2em] text-[#555] brand-font font-bold">Status</div>
+              <div className="mb-4 text-[9px] uppercase tracking-[0.2em] text-[#8a8a8a] brand-font font-bold">Status</div>
               <div className="space-y-3">
                 <div className={`border-[0.5px] px-4 py-3 text-[11px] font-mono uppercase tracking-[0.14em] ${missingGame ? 'border-[#4a3f08] bg-[#151202] text-[#fcee09]' : 'border-[#163023] bg-[#07110b] text-[#6fe3b1]'}`}>
                   {missingGame ? 'Game path invalid or missing' : 'Game path valid'}
@@ -181,7 +181,7 @@ export const WelcomeScreen: React.FC = () => {
                 </div>
               </div>
 
-              <p className="mt-5 text-[11px] text-[#555] font-mono uppercase tracking-[0.12em] leading-6">
+              <p className="mt-5 text-[11px] text-[#8a8a8a] font-mono uppercase tracking-[0.12em] leading-6">
                 Mod installation stays locked until both required paths are configured.
               </p>
 
@@ -195,7 +195,7 @@ export const WelcomeScreen: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setActiveView('settings')}
-                  className="px-4 py-2 bg-[#0a0a0a] border-[0.5px] border-[#1a1a1a] text-[#888] rounded-sm text-[10px] brand-font font-semibold uppercase tracking-widest hover:text-white hover:border-[#333] transition-colors"
+                  className="px-4 py-2 bg-[#0a0a0a] border-[0.5px] border-[#1a1a1a] text-[#9a9a9a] rounded-sm text-[10px] brand-font font-semibold uppercase tracking-widest hover:text-white hover:border-[#7a7a7a] transition-colors"
                 >
                   Open Configuration
                 </button>

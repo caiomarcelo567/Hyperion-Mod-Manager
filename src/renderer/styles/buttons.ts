@@ -50,7 +50,7 @@ export const SecondaryButton = styled(Button)(() => ({
 // Ghost — no border, muted text
 export const GhostButton = styled(Button)(() => ({
   background: 'transparent',
-  color: 'rgba(242,242,242,0.55)',
+  color: 'rgba(242,242,242,0.72)',
   fontFamily: '"DM Sans", sans-serif',
   fontWeight: 500,
   fontSize: '0.8125rem',
@@ -95,7 +95,7 @@ export const DestructiveButton = styled(Button)(() => ({
 
 // Icon button — refined, no glow
 export const SubtleIconButton = styled(IconButton)(() => ({
-  color: 'rgba(242,242,242,0.4)',
+  color: 'rgba(242,242,242,0.6)',
   borderRadius: 6,
   transition: 'color 100ms ease, background 100ms ease',
   '&:hover': {

@@ -446,7 +446,7 @@ export const ModList: React.FC = () => {
       {isInstalling && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#050505]/90 pointer-events-none">
           <span className="material-symbols-outlined text-[40px] text-[#fcee09] mb-4 animate-spin">progress_activity</span>
-          <span className="brand-font text-sm text-[#888] tracking-widest uppercase">Installing...</span>
+          <span className="brand-font text-sm text-[#9a9a9a] tracking-widest uppercase">Installing...</span>
         </div>
       )}
 
@@ -457,10 +457,10 @@ export const ModList: React.FC = () => {
               <h1 className="brand-font text-xl text-white font-bold tracking-widest uppercase">
                 Managed Mods
               </h1>
-              <p className="text-[#888] text-xs mt-1.5 flex items-center gap-2 font-mono tracking-tight">
+              <p className="text-[#9a9a9a] text-xs mt-1.5 flex items-center gap-2 font-mono tracking-tight">
                 TOTAL: {totalCount} &nbsp;|&nbsp; ACTIVE: {enabledCount}
               </p>
-              <p className="text-[#444] text-[10px] mt-2 font-mono uppercase tracking-[0.18em]">
+              <p className="text-[#7a7a7a] text-[10px] mt-2 font-mono uppercase tracking-[0.18em]">
                 Shift+Click selects ranges. Ctrl+A selects every visible mod.
               </p>
             </div>
@@ -473,13 +473,13 @@ export const ModList: React.FC = () => {
                   title={allModsEnabled ? 'Disable all mods' : 'Enable all mods'}
                 >
                   <div className={`relative h-6 w-12 rounded-full border-[0.5px] transition-all ${allModsEnabled ? 'border-[#fcee09]/50 bg-[#241f04]' : 'border-[#222] bg-[#101010]'}`}>
-                    <div className={`absolute top-1/2 h-[18px] w-[18px] -translate-y-1/2 rounded-full transition-all ${allModsEnabled ? 'right-[2px] bg-[#fcee09] shadow-[0_0_10px_rgba(252,238,9,0.45)]' : 'left-[2px] bg-[#444]'}`} />
+                    <div className={`absolute top-1/2 h-[18px] w-[18px] -translate-y-1/2 rounded-full transition-all ${allModsEnabled ? 'right-[2px] bg-[#fcee09] shadow-[0_0_10px_rgba(252,238,9,0.45)]' : 'left-[2px] bg-[#7a7a7a]'}`} />
                   </div>
-                  <span className={`text-[10px] brand-font font-semibold uppercase tracking-[0.18em] ${allModsEnabled ? 'text-[#fcee09]' : 'text-[#777] group-hover:text-white'}`}>
+                  <span className={`text-[10px] brand-font font-semibold uppercase tracking-[0.18em] ${allModsEnabled ? 'text-[#fcee09]' : 'text-[#8a8a8a] group-hover:text-white'}`}>
                     {allModsEnabled ? 'Disable All' : 'Enable All'}
                   </span>
                 </button>
-                <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-[#666]">
+                <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-[#8a8a8a]">
                   {enabledCount}/{totalCount}
                 </span>
               </div>
@@ -499,19 +499,19 @@ export const ModList: React.FC = () => {
               className="grid gap-4 px-6 py-3 border-b-[0.5px] border-[#1a1a1a] bg-[#070707]"
               style={{ gridTemplateColumns: '56px 36px minmax(200px,1fr) 100px 130px 160px 88px' }}
             >
-                <span className="pl-2 text-[9px] uppercase tracking-widest text-[#555] brand-font font-bold whitespace-nowrap">Status</span>
-                <span className="text-[9px] uppercase tracking-widest text-[#555] brand-font font-bold">#</span>
-                <span className="text-[9px] uppercase tracking-widest text-[#555] brand-font font-bold">Mod Name</span>
-                <span className="text-[9px] uppercase tracking-widest text-[#555] brand-font font-bold">Version</span>
-                <span className="text-[9px] uppercase tracking-widest text-[#555] brand-font font-bold">Type</span>
-                <span className="text-[9px] uppercase tracking-widest text-[#555] brand-font font-bold">Installed</span>
-                <span className="text-[9px] uppercase tracking-widest text-[#555] brand-font font-bold text-right">Actions</span>
+                <span className="pl-2 text-[9px] uppercase tracking-widest text-[#8a8a8a] brand-font font-bold whitespace-nowrap">Status</span>
+                <span className="text-[9px] uppercase tracking-widest text-[#8a8a8a] brand-font font-bold">#</span>
+                <span className="text-[9px] uppercase tracking-widest text-[#8a8a8a] brand-font font-bold">Mod Name</span>
+                <span className="text-[9px] uppercase tracking-widest text-[#8a8a8a] brand-font font-bold">Version</span>
+                <span className="text-[9px] uppercase tracking-widest text-[#8a8a8a] brand-font font-bold">Type</span>
+                <span className="text-[9px] uppercase tracking-widest text-[#8a8a8a] brand-font font-bold">Installed</span>
+                <span className="text-[9px] uppercase tracking-widest text-[#8a8a8a] brand-font font-bold text-right">Actions</span>
             </div>
 
             {displayedMods.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-24 gap-4">
-                <span className="material-symbols-outlined text-[48px] text-[#333]">inventory_2</span>
-                <span className="text-[#555] text-sm font-mono tracking-tight">
+                <span className="material-symbols-outlined text-[48px] text-[#7a7a7a]">inventory_2</span>
+                <span className="text-[#8a8a8a] text-sm font-mono tracking-tight">
                   {filter
                     ? 'No mods match the search'
                     : totalCount === 0

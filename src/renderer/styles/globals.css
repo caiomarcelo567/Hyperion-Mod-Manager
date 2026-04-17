@@ -18,9 +18,9 @@
 
   /* Text */
   --text-primary:   #F2F2F2;
-  --text-secondary: rgba(242, 242, 242, 0.55);
-  --text-muted:     rgba(242, 242, 242, 0.28);
-  --text-disabled:  rgba(242, 242, 242, 0.15);
+  --text-secondary: rgba(242, 242, 242, 0.72);
+  --text-muted:     rgba(242, 242, 242, 0.5);
+  --text-disabled:  rgba(242, 242, 242, 0.46);
   --text-accent:    #FCEE09;
 
   /* Accent */

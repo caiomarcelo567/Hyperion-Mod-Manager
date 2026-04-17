@@ -140,7 +140,7 @@ export const SettingsPage: React.FC = () => {
           <h1 className="brand-font text-[1.5rem] font-black tracking-[0.08em] text-white uppercase leading-none mb-2">
             Configuration
           </h1>
-          <p className="text-[10px] tracking-[0.2em] text-[#444] uppercase font-mono">
+          <p className="text-[10px] tracking-[0.2em] text-[#7a7a7a] uppercase font-mono">
             System Parameters &amp; Deployment Rules
           </p>
         </div>
@@ -149,14 +149,14 @@ export const SettingsPage: React.FC = () => {
 
         {/* Core Directories */}
         <section className="mb-10">
-          <h2 className="text-[10px] tracking-[0.2em] text-[#555] uppercase font-mono font-bold mb-8">
+          <h2 className="text-[10px] tracking-[0.2em] text-[#8a8a8a] uppercase font-mono font-bold mb-8">
             Core Directories
           </h2>
 
           {/* Game Path */}
           <div className="mb-8">
             <div className="flex justify-between items-baseline mb-2">
-              <label className="text-[10px] tracking-[0.15em] text-[#888] uppercase font-mono">
+              <label className="text-[10px] tracking-[0.15em] text-[#9a9a9a] uppercase font-mono">
                 Game Path
               </label>
               <span className={`text-[9px] tracking-[0.15em] uppercase font-mono ${gamePathValid ? 'text-[#6fe3b1]' : 'text-[#fcee09]'}`}>
@@ -173,19 +173,19 @@ export const SettingsPage: React.FC = () => {
               />
               <button
                 onClick={browseGame}
-                className="px-6 py-3 bg-[#0f0f0f] border-[0.5px] border-[#1a1a1a] text-[10px] tracking-widest font-bold uppercase text-[#999] hover:border-[#fcee09]/60 hover:text-[#fcee09] transition-all whitespace-nowrap"
+                className="px-6 py-3 bg-[#0f0f0f] border-[0.5px] border-[#1a1a1a] text-[10px] tracking-widest font-bold uppercase text-[#b0b0b0] hover:border-[#fcee09]/60 hover:text-[#fcee09] transition-all whitespace-nowrap"
               >
                 Browse
               </button>
               <button
                 onClick={autoDetectGame}
                 disabled={detectingGame}
-                className="px-5 py-3 bg-[#090909] border-[0.5px] border-[#1a1a1a] text-[10px] tracking-widest font-bold uppercase text-[#777] hover:border-[#fcee09]/45 hover:text-[#fcee09] transition-all whitespace-nowrap disabled:opacity-50"
+                className="px-5 py-3 bg-[#090909] border-[0.5px] border-[#1a1a1a] text-[10px] tracking-widest font-bold uppercase text-[#8a8a8a] hover:border-[#fcee09]/45 hover:text-[#fcee09] transition-all whitespace-nowrap disabled:opacity-60"
               >
                 {detectingGame ? 'Detecting' : 'Auto Detect'}
               </button>
             </div>
-            <p className="text-[11px] text-[#333] mt-2 font-mono">
+            <p className="text-[11px] text-[#7a7a7a] mt-2 font-mono">
               {gamePathValid
                 ? 'Root Cyberpunk 2077 folder detected and ready to launch.'
                 : 'Root Cyberpunk 2077 folder required. A valid path must contain bin\\x64\\Cyberpunk2077.exe.'}
@@ -195,7 +195,7 @@ export const SettingsPage: React.FC = () => {
           {/* Mod Library */}
           <div className="mb-8">
             <div className="flex justify-between items-baseline mb-2">
-              <label className="text-[10px] tracking-[0.15em] text-[#888] uppercase font-mono">
+              <label className="text-[10px] tracking-[0.15em] text-[#9a9a9a] uppercase font-mono">
                 Mod Library
               </label>
               <span className={`text-[9px] tracking-[0.15em] uppercase font-mono ${libraryPathValid ? 'text-[#6fe3b1]' : 'text-[#fcee09]'}`}>
@@ -212,12 +212,12 @@ export const SettingsPage: React.FC = () => {
               />
               <button
                 onClick={browseLibrary}
-                className="px-6 py-3 bg-[#0f0f0f] border-[0.5px] border-[#1a1a1a] text-[10px] tracking-widest font-bold uppercase text-[#999] hover:border-[#fcee09]/60 hover:text-[#fcee09] transition-all whitespace-nowrap"
+                className="px-6 py-3 bg-[#0f0f0f] border-[0.5px] border-[#1a1a1a] text-[10px] tracking-widest font-bold uppercase text-[#b0b0b0] hover:border-[#fcee09]/60 hover:text-[#fcee09] transition-all whitespace-nowrap"
               >
                 Browse
               </button>
             </div>
-            <p className="text-[11px] text-[#333] mt-2 font-mono">
+            <p className="text-[11px] text-[#7a7a7a] mt-2 font-mono">
               {libraryPathValid
                 ? 'Mod library path is valid. Hyperion can store and manage mods here.'
                 : 'Use an absolute folder path for the mod library. Game, library, and downloads can live on different drives.'}
@@ -226,10 +226,10 @@ export const SettingsPage: React.FC = () => {
 
           <div className="mb-8">
             <div className="flex justify-between items-baseline mb-2">
-              <label className="text-[10px] tracking-[0.15em] text-[#888] uppercase font-mono">
+              <label className="text-[10px] tracking-[0.15em] text-[#9a9a9a] uppercase font-mono">
                 Downloads Path
               </label>
-              <span className="text-[9px] tracking-[0.15em] text-[#444] uppercase font-mono">Optional</span>
+              <span className="text-[9px] tracking-[0.15em] text-[#7a7a7a] uppercase font-mono">Optional</span>
             </div>
             <div className="flex gap-0">
               <input
@@ -241,18 +241,18 @@ export const SettingsPage: React.FC = () => {
               />
               <button
                 onClick={browseDownloads}
-                className="px-6 py-3 bg-[#0f0f0f] border-[0.5px] border-[#1a1a1a] text-[10px] tracking-widest font-bold uppercase text-[#999] hover:border-[#fcee09]/60 hover:text-[#fcee09] transition-all whitespace-nowrap"
+                className="px-6 py-3 bg-[#0f0f0f] border-[0.5px] border-[#1a1a1a] text-[10px] tracking-widest font-bold uppercase text-[#b0b0b0] hover:border-[#fcee09]/60 hover:text-[#fcee09] transition-all whitespace-nowrap"
               >
                 Browse
               </button>
             </div>
-            <p className="text-[11px] text-[#333] mt-2 font-mono">
+            <p className="text-[11px] text-[#7a7a7a] mt-2 font-mono">
               Optional archive source folder. You can keep this on any drive.
             </p>
           </div>
         </section>
 
-        <div className="mt-12 text-right text-[10px] uppercase tracking-[0.16em] text-[#3d3d3d] font-mono">
+        <div className="mt-12 text-right text-[10px] uppercase tracking-[0.16em] text-[#7a7a7a] font-mono">
           Hyperion {appVersion}
         </div>
 

@@ -27,14 +27,14 @@ export const LibraryPathSnackbar: React.FC = () => {
       <div className="flex items-start gap-3 px-4 py-3 pl-5">
         <span className="material-symbols-outlined mt-[1px] text-[16px] text-[#fcee09]">warning</span>
         <div className="min-w-0 flex-1">
-          <div className="text-[10px] uppercase tracking-[0.2em] text-[#777] brand-font font-bold">{title}</div>
+          <div className="text-[10px] uppercase tracking-[0.2em] text-[#8a8a8a] brand-font font-bold">{title}</div>
           <div className="mt-1 text-[13px] leading-5 text-[#e5e2e1]">
             {description}
           </div>
         </div>
         <button
           onClick={() => setActiveView('settings')}
-          className="shrink-0 rounded-sm border-[0.5px] border-[#1a1a1a] bg-[#0a0a0a] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#999] transition-colors hover:border-[#333] hover:text-white"
+          className="shrink-0 rounded-sm border-[0.5px] border-[#1a1a1a] bg-[#0a0a0a] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#b0b0b0] transition-colors hover:border-[#7a7a7a] hover:text-white"
         >
           Set Paths
         </button>
