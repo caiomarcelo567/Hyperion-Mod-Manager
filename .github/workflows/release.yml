@@ -63,11 +63,21 @@ jobs:
         if: steps.tag_check.outputs.exists == 'true'
         run: npm run dist
 
-      - name: Build and publish
+      - name: Build installer for new tag
         if: steps.tag_check.outputs.exists == 'false'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run dist:publish
+        run: npm run dist
+
+      - name: Publish GitHub release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: v${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            dist/Hyperion-${{ steps.version.outputs.version }}.exe
+            dist/Hyperion-${{ steps.version.outputs.version }}.exe.blockmap
+            dist/latest.yml
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
