@@ -23,6 +23,8 @@ export const SettingsPage: React.FC = () => {
   const [detectingGame, setDetectingGame] = useState(false)
   const [gamePathValid, setGamePathValid] = useState(false)
   const [libraryPathValid, setLibraryPathValid] = useState(false)
+  const [appVersion, setAppVersion] = useState('—')
+
   useEffect(() => {
     if (settings) {
       setGamePath(settings.gamePath ?? '')
@@ -38,6 +40,12 @@ export const SettingsPage: React.FC = () => {
   useEffect(() => {
     validateLibraryPath(libraryPath).then(setLibraryPathValid).catch(() => setLibraryPathValid(false))
   }, [libraryPath, validateLibraryPath])
+
+  useEffect(() => {
+    IpcService.invoke<string>(IPC.GET_APP_VERSION)
+      .then((version) => setAppVersion(version || '—'))
+      .catch(() => setAppVersion('—'))
+  }, [])
 
   useEffect(() => {
     if (!settings) return
@@ -244,8 +252,9 @@ export const SettingsPage: React.FC = () => {
           </div>
         </section>
 
-        {/* Future additions placeholder */}
-        <div className="h-16" />
+        <div className="mt-12 text-right text-[10px] uppercase tracking-[0.16em] text-[#3d3d3d] font-mono">
+          Hyperion {appVersion}
+        </div>
 
       </div>
     </div>
