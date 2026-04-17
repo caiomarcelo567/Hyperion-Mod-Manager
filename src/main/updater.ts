@@ -58,6 +58,6 @@ export function initializeUpdates(mainWindow: BrowserWindow): void {
   })
 
   ipcMain.on(IPC.INSTALL_UPDATE, () => {
-    autoUpdater.quitAndInstall()
+    autoUpdater.quitAndInstall(true, true)
   })
 }

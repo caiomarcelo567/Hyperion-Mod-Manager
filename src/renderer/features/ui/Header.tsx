@@ -25,7 +25,6 @@ export const Header: React.FC = () => {
     requestLibraryDeleteAll,
     addToast,
   } = useAppStore()
-  const [showUpdatePanel, setShowUpdatePanel] = useState(false)
   const [autoApplyUpdate, setAutoApplyUpdate] = useState(false)
 
   const chromeButtonClass = 'flex h-8 w-8 items-center justify-center rounded-sm text-[#555] transition-colors hover:bg-[#111] hover:text-white'
@@ -80,7 +79,6 @@ export const Header: React.FC = () => {
 
   useEffect(() => {
     if (!updateAvailable && !updateDownloading && !updateDownloaded) {
-      setShowUpdatePanel(false)
       setAutoApplyUpdate(false)
     }
   }, [updateAvailable, updateDownloading, updateDownloaded])
@@ -89,8 +87,14 @@ export const Header: React.FC = () => {
   const updateActionLabel = updateDownloading
     ? `Downloading ${updateProgress}%`
     : updateDownloaded
-      ? 'Restart and Apply'
-      : `Install ${updateInfo?.version ?? ''}`.trim()
+      ? 'Installing update...'
+      : `Install update${updateInfo?.version ? ` ${updateInfo.version}` : ''}`
+  const updateProgressWidth = `${Math.min(Math.max(updateProgress, 0), 100)}%`
+  const updateIcon = updateDownloading
+    ? 'downloading'
+    : updateDownloaded
+      ? 'autorenew'
+      : 'download_for_offline'
 
   return (
     <header
@@ -146,49 +150,32 @@ export const Header: React.FC = () => {
         )}
 
         {showUpdateTrigger && (
-          <div className="relative">
-            <button
-              className={`relative flex h-8 w-8 items-center justify-center rounded-sm border-[0.5px] transition-colors ${
-                updateDownloaded
-                  ? 'border-[#fcee09]/55 bg-[#151202] text-[#fcee09] hover:bg-[#1c1704]'
-                  : updateDownloading
-                    ? 'border-[#333] bg-[#0a0a0a] text-[#fcee09] hover:border-[#555]'
-                    : 'border-[#4a3f08] bg-[#120f03] text-[#fcee09] hover:border-[#fcee09] hover:bg-[#171303]'
-              }`}
-              title={updateDownloading ? `Downloading ${updateProgress}%` : `Update ${updateInfo?.version ?? ''}`.trim()}
-              onClick={() => setShowUpdatePanel((current) => !current)}
-            >
-              <span className={`material-symbols-outlined text-[18px] ${updateDownloading ? 'animate-pulse' : ''}`}>
-                {updateDownloaded ? 'system_update_alt' : updateDownloading ? 'progress_activity' : 'system_update'}
-              </span>
-            </button>
-
-            {showUpdatePanel && (
-              <div className="absolute right-0 top-11 z-50 w-[280px] overflow-hidden rounded-sm border-[0.5px] border-[#242424] bg-[#090909] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.55)]">
-                <div className="text-[9px] uppercase tracking-[0.2em] text-[#666] font-mono">Update Ready</div>
-                <div className="mt-2 brand-font text-[22px] font-black tracking-[0.04em] text-white">
-                  v{updateInfo?.version ?? '—'}
-                </div>
-                <p className="mt-2 text-[12px] leading-5 text-[#8d8d8d]">
-                  Hyperion downloads the release in place and applies it automatically. No manual setup reinstall is required.
-                </p>
-
-                {updateDownloading && (
-                  <div className="mt-3 text-[10px] uppercase tracking-[0.16em] text-[#fcee09] font-mono">
-                    Downloading {updateProgress}%
-                  </div>
-                )}
-
-                <button
-                  onClick={() => void handleUpdateAction()}
-                  disabled={updateDownloading}
-                  className="mt-4 flex w-full items-center justify-center rounded-sm bg-[#fcee09] px-4 py-3 text-[10px] uppercase tracking-[0.18em] text-[#050505] brand-font font-bold transition-colors hover:bg-white disabled:cursor-not-allowed disabled:bg-[#2d2d2d] disabled:text-[#666]"
-                >
-                  {updateActionLabel}
-                </button>
-              </div>
+          <button
+            onClick={() => void handleUpdateAction()}
+            disabled={updateDownloading || updateDownloaded}
+            title={updateActionLabel}
+            className={`relative flex h-10 min-w-[204px] items-center justify-center overflow-hidden rounded-sm border-[0.5px] px-4 text-[10px] uppercase tracking-[0.18em] transition-all ${
+              updateDownloaded
+                ? 'border-[#fcee09]/60 bg-[#151202] text-[#fcee09]'
+                : updateDownloading
+                  ? 'border-[#5f5a08] bg-[#0b0b0b] text-[#fcee09]'
+                  : 'border-[#4a3f08] bg-[#120f03] text-[#fcee09] hover:border-[#fcee09] hover:bg-[#171303] hover:text-white'
+            } ${updateDownloading || updateDownloaded ? 'cursor-default' : ''}`}
+          >
+            {updateDownloading && (
+              <span
+                className="absolute inset-y-0 left-0 bg-[linear-gradient(90deg,rgba(252,238,9,0.22),rgba(252,238,9,0.5))] transition-[width] duration-200 ease-out"
+                style={{ width: updateProgressWidth }}
+              />
             )}
-          </div>
+
+            <span className="relative z-10 flex items-center gap-2 brand-font font-bold">
+              <span className={`material-symbols-outlined text-[18px] ${updateDownloading || updateDownloaded ? 'animate-pulse' : ''}`}>
+                {updateIcon}
+              </span>
+              <span>{updateActionLabel}</span>
+            </span>
+          </button>
         )}
 
         {updateError && !updateAvailable && (
