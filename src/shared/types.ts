@@ -1,0 +1,186 @@
+// ─── Mod Types ───────────────────────────────────────────────────────────────
+
+export type ModType =
+  | 'archive'
+  | 'redmod'
+  | 'cet'
+  | 'redscript'
+  | 'tweakxl'
+  | 'red4ext'
+  | 'bin'
+  | 'engine'
+  | 'r6'
+  | 'unknown'
+
+export type ModKind = 'mod' | 'separator' | 'empty'
+
+export interface ModMetadata {
+  uuid: string
+  name: string
+  type: ModType
+  kind: ModKind
+  order: number
+  enabled: boolean
+  author?: string
+  version?: string
+  description?: string
+  installedAt: string
+  enabledAt?: string
+  sourceModifiedAt?: string
+  fileSize?: number
+  files: string[]
+  hashes?: string[]
+  folderName?: string
+  sourcePath?: string
+  sourceType?: 'archive' | 'directory'
+  deployedPaths?: string[]
+}
+
+// ─── Settings ────────────────────────────────────────────────────────────────
+
+export interface AppSettings {
+  gamePath: string
+  libraryPath: string
+  downloadPath: string
+  theme: 'dark'
+  autoUpdate: boolean
+}
+
+export interface DownloadEntry {
+  path: string
+  name: string
+  size: number
+  modifiedAt: string
+  extension: string
+}
+
+// ─── Install ──────────────────────────────────────────────────────────────────
+
+export interface InstallProgress {
+  step: string
+  percent: number
+}
+
+export interface ConflictInfo {
+  hash: string
+  resourcePath: string
+  existingModId: string
+  existingModName: string
+  incomingModName: string
+}
+
+export interface DuplicateModInfo {
+  existingModId: string
+  existingModName: string
+  incomingModName: string
+  sourcePath: string
+}
+
+export type InstallDuplicateAction = 'prompt' | 'replace' | 'copy'
+
+export interface InstallModRequest {
+  filePath: string
+  duplicateAction?: InstallDuplicateAction
+  targetModId?: string
+}
+
+export interface InstallModResponse {
+  status: 'installed' | 'duplicate' | 'conflict'
+  mod?: ModMetadata
+  conflicts?: ConflictInfo[]
+  duplicate?: DuplicateModInfo
+}
+
+export interface InstallResult {
+  ok: boolean
+  mod?: ModMetadata
+  error?: string
+}
+
+export interface PurgeModsResult {
+  purged: number
+  failed: number
+}
+
+// ─── IPC Result wrapper ───────────────────────────────────────────────────────
+
+export interface IpcResult<T = undefined> {
+  ok: boolean
+  data?: T
+  error?: string
+}
+
+// ─── Update ──────────────────────────────────────────────────────────────────
+
+export interface UpdateInfo {
+  version: string
+  releaseNotes?: string
+}
+
+export interface UpdateProgress {
+  percent: number
+  bytesPerSecond: number
+  transferred: number
+  total: number
+}
+
+// ─── Toast ────────────────────────────────────────────────────────────────────
+
+export type ToastSeverity = 'success' | 'error' | 'warning' | 'info'
+
+export interface Toast {
+  id: string
+  message: string
+  severity: ToastSeverity
+  duration?: number
+}
+
+// ─── IPC Channels ────────────────────────────────────────────────────────────
+
+export const IPC = {
+  // Settings
+  GET_SETTINGS: 'settings:get',
+  SET_SETTINGS: 'settings:set',
+
+  // Mods
+  SCAN_MODS: 'mods:scan',
+  ENABLE_MOD: 'mods:enable',
+  DISABLE_MOD: 'mods:disable',
+  PURGE_MODS: 'mods:purge',
+  DELETE_MOD: 'mods:delete',
+  REORDER_MODS: 'mods:reorder',
+  UPDATE_MOD_METADATA: 'mods:updateMetadata',
+
+  // Install
+  INSTALL_MOD: 'install:mod',
+  REINSTALL_MOD: 'install:reinstall',
+  INSTALL_PROGRESS: 'install:progress',
+  LIST_DOWNLOADS: 'downloads:list',
+  DELETE_DOWNLOAD: 'downloads:delete',
+
+  // Game
+  DETECT_GAME: 'game:detect',
+  VALIDATE_GAME_PATH: 'game:validatePath',
+  VALIDATE_LIBRARY_PATH: 'library:validatePath',
+  LAUNCH_GAME: 'game:launch',
+
+  // Updates
+  CHECK_UPDATE: 'update:check',
+  DOWNLOAD_UPDATE: 'update:download',
+  INSTALL_UPDATE: 'update:install',
+  UPDATE_AVAILABLE: 'update:available',
+  UPDATE_PROGRESS: 'update:progress',
+  UPDATE_DOWNLOADED: 'update:downloaded',
+  UPDATE_ERROR: 'update:error',
+
+  // App / Dialogs
+  APP_READY: 'app:ready',
+  OPEN_FILE_DIALOG: 'dialog:openFile',
+  OPEN_FOLDER_DIALOG: 'dialog:openFolder',
+  OPEN_PATH: 'shell:openPath',
+  SHOW_ITEM_IN_FOLDER: 'shell:showItemInFolder',
+  OPEN_EXTERNAL: 'shell:openExternal',
+  GET_APP_VERSION: 'app:getVersion',
+} as const
+
+export type IpcChannel = (typeof IPC)[keyof typeof IPC]
