@@ -123,21 +123,8 @@ If you change the renderer UI:
 - update [DESIGN.md](DESIGN.md) in the same task if behavior or visuals changed
 - for bigger visual explorations, prototype direction in Google Stitch before implementation
 
-## Project Notes For Contributors
-
-- Main process code lives in `src/main`
-- Renderer code lives in `src/renderer`
-- Shared IPC contracts live in `src/shared/types.ts`
-- Splash handoff depends on `IPC.APP_READY`
-- Mod library scans must ignore symlinks/junctions
-- Reinstall behavior depends on stored `sourcePath` and `sourceType`
-
 ## Repository Files
 
 - [CLAUDE.md](CLAUDE.md): project instructions for coding agents and future AI sessions
 - [DESIGN.md](DESIGN.md): current visual and interaction specification
 - [.github/workflows/release.yml](.github/workflows/release.yml): release automation
-
-## License
-
-MIT
