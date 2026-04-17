@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useAppStore } from '../../store/useAppStore'
 import { IpcService } from '../../services/IpcService'
 import type { LibraryStatusFilter } from '../../store/slices/createLibrarySlice'
@@ -25,6 +25,8 @@ export const Header: React.FC = () => {
     requestLibraryDeleteAll,
     addToast,
   } = useAppStore()
+  const [showUpdatePanel, setShowUpdatePanel] = useState(false)
+  const [autoApplyUpdate, setAutoApplyUpdate] = useState(false)
 
   const chromeButtonClass = 'flex h-8 w-8 items-center justify-center rounded-sm text-[#555] transition-colors hover:bg-[#111] hover:text-white'
   const utilityButtonClass = 'flex h-8 w-8 items-center justify-center rounded-sm text-[#555] transition-colors hover:bg-[#111] hover:text-white disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-[#555]'
@@ -46,29 +48,49 @@ export const Header: React.FC = () => {
     disabled: 'Filter: disabled mods',
   }
 
-  const handleUpdateClick = async () => {
+  useEffect(() => {
+    if (!updateDownloaded || !autoApplyUpdate) return
+
+    addToast('Update downloaded. Restarting Hyperion...', 'info', 1800)
+    const timeoutId = window.setTimeout(() => {
+      installUpdate()
+    }, 700)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [updateDownloaded, autoApplyUpdate, installUpdate, addToast])
+
+  const handleUpdateAction = async () => {
+    if (updateDownloading) {
+      return
+    }
+
     if (updateDownloaded) {
       installUpdate()
       return
     }
 
-    if (updateDownloading) {
-      return
-    }
-
     try {
+      setAutoApplyUpdate(true)
       await downloadUpdate()
     } catch {
+      setAutoApplyUpdate(false)
       addToast('Could not download update', 'error')
     }
   }
 
-  const updateButtonLabel = (() => {
-    if (updateDownloaded) return 'Restart to Update'
-    if (updateDownloading) return `Downloading ${updateProgress}%`
-    if (updateAvailable) return `Update ${updateInfo?.version ?? ''}`.trim()
-    return ''
-  })()
+  useEffect(() => {
+    if (!updateAvailable && !updateDownloading && !updateDownloaded) {
+      setShowUpdatePanel(false)
+      setAutoApplyUpdate(false)
+    }
+  }, [updateAvailable, updateDownloading, updateDownloaded])
+
+  const showUpdateTrigger = updateAvailable || updateDownloading || updateDownloaded
+  const updateActionLabel = updateDownloading
+    ? `Downloading ${updateProgress}%`
+    : updateDownloaded
+      ? 'Restart and Apply'
+      : `Install ${updateInfo?.version ?? ''}`.trim()
 
   return (
     <header
@@ -123,23 +145,50 @@ export const Header: React.FC = () => {
           </>
         )}
 
-        {updateAvailable && (
-          <button
-            onClick={() => void handleUpdateClick()}
-            className={`group flex items-center gap-2 rounded-sm border-[0.5px] px-3 py-1.5 text-[10px] brand-font font-bold uppercase tracking-[0.16em] transition-all ${
-              updateDownloaded
-                ? 'border-[#fcee09] bg-[#151202] text-[#fcee09] hover:bg-[#1c1704] hover:text-white'
-                : updateDownloading
-                  ? 'border-[#333] bg-[#0a0a0a] text-[#fcee09] hover:border-[#555]'
-                  : 'border-[#4a3f08] bg-[#120f03] text-[#fcee09] hover:border-[#fcee09] hover:bg-[#171303]'
-            }`}
-            title={updateDownloaded ? 'Close and install update' : updateButtonLabel}
-          >
-            <span className={`material-symbols-outlined text-[18px] ${!updateDownloading ? 'group-hover:scale-110 transition-transform' : ''}`}>
-              {updateDownloaded ? 'system_update_alt' : updateDownloading ? 'progress_activity' : 'download'}
-            </span>
-            <span className="max-w-[180px] truncate">{updateButtonLabel}</span>
-          </button>
+        {showUpdateTrigger && (
+          <div className="relative">
+            <button
+              className={`relative flex h-8 w-8 items-center justify-center rounded-sm border-[0.5px] transition-colors ${
+                updateDownloaded
+                  ? 'border-[#fcee09]/55 bg-[#151202] text-[#fcee09] hover:bg-[#1c1704]'
+                  : updateDownloading
+                    ? 'border-[#333] bg-[#0a0a0a] text-[#fcee09] hover:border-[#555]'
+                    : 'border-[#4a3f08] bg-[#120f03] text-[#fcee09] hover:border-[#fcee09] hover:bg-[#171303]'
+              }`}
+              title={updateDownloading ? `Downloading ${updateProgress}%` : `Update ${updateInfo?.version ?? ''}`.trim()}
+              onClick={() => setShowUpdatePanel((current) => !current)}
+            >
+              <span className={`material-symbols-outlined text-[18px] ${updateDownloading ? 'animate-pulse' : ''}`}>
+                {updateDownloaded ? 'system_update_alt' : updateDownloading ? 'progress_activity' : 'system_update'}
+              </span>
+            </button>
+
+            {showUpdatePanel && (
+              <div className="absolute right-0 top-11 z-50 w-[280px] overflow-hidden rounded-sm border-[0.5px] border-[#242424] bg-[#090909] p-4 shadow-[0_18px_50px_rgba(0,0,0,0.55)]">
+                <div className="text-[9px] uppercase tracking-[0.2em] text-[#666] font-mono">Update Ready</div>
+                <div className="mt-2 brand-font text-[22px] font-black tracking-[0.04em] text-white">
+                  v{updateInfo?.version ?? '—'}
+                </div>
+                <p className="mt-2 text-[12px] leading-5 text-[#8d8d8d]">
+                  Hyperion downloads the release in place and applies it automatically. No manual setup reinstall is required.
+                </p>
+
+                {updateDownloading && (
+                  <div className="mt-3 text-[10px] uppercase tracking-[0.16em] text-[#fcee09] font-mono">
+                    Downloading {updateProgress}%
+                  </div>
+                )}
+
+                <button
+                  onClick={() => void handleUpdateAction()}
+                  disabled={updateDownloading}
+                  className="mt-4 flex w-full items-center justify-center rounded-sm bg-[#fcee09] px-4 py-3 text-[10px] uppercase tracking-[0.18em] text-[#050505] brand-font font-bold transition-colors hover:bg-white disabled:cursor-not-allowed disabled:bg-[#2d2d2d] disabled:text-[#666]"
+                >
+                  {updateActionLabel}
+                </button>
+              </div>
+            )}
+          </div>
         )}
 
         {updateError && !updateAvailable && (

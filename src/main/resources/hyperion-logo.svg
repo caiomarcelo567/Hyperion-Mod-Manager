@@ -15,7 +15,7 @@
   <g filter="url(#hyperionGlow)">
     <rect x="52" y="44" width="52" height="52" rx="10" fill="#FCEE09"/>
   </g>
-  <path d="M67.5 61.5H74.8L78 64.7L81.2 61.5H88.5V73.5H83.4V68.7L78 74.1L72.6 68.7V73.5H67.5V61.5Z" fill="#0A0A0A"/>
+  <rect x="68" y="60" width="20" height="20" rx="3" fill="#050505"/>
   <text x="132" y="90" fill="#E5E2E1" font-family="Syne, Arial, sans-serif" font-size="42" font-weight="800" letter-spacing="8">HYPERION</text>
   <line x1="132" y1="116.5" x2="472" y2="116.5" stroke="url(#accentLine)"/>
 </svg>
