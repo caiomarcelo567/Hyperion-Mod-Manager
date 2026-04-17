@@ -42,6 +42,8 @@
 - GitHub publish target is caiomarcelo567/Hyperion-Mod-Manager.
 - If update checks fail, inspect src/main/updater.ts, the release workflow, and whether the current version exists as a published GitHub release.
 - Renderer update state lives in createUpdatesSlice.ts and header status lives in Header.tsx.
+- Current updater UX is single-step: one header button starts download, shows inline progress, then installs and relaunches without a second click.
+- Silent install behavior depends on src/main/updater.ts calling quitAndInstall with silent relaunch flags; if the NSIS wizard appears during auto-update, inspect that call first.
 
 ## UI Rules
 - Preserve the dark industrial Hyperion look: near-black surfaces, precise yellow accent, restrained shadows.

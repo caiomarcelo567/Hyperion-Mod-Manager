@@ -67,7 +67,7 @@ Hard no:
 
 - Height: 56px
 - Left side: Hyperion mark + wordmark + search
-- Right side: library utility buttons, updater status CTA, logs placeholder icon, native window controls
+- Right side: library utility buttons, single-step updater CTA, logs placeholder icon, native window controls
 - The terminal icon in the header currently means Logs placeholder, not an in-app terminal session
 
 ### Sidebar
@@ -163,8 +163,11 @@ Destructive:
 
 ## 6. Updater UX
 
-- Update availability appears in the header as a compact CTA
-- States: available, downloading, downloaded, error
+- Update availability appears in the header as a single compact CTA
+- One click on Install update starts download immediately; no separate popover or second confirmation step
+- Download progress is rendered inside the button itself
+- After download finishes, the app installs and relaunches automatically
+- States: available, downloading, installing, error
 - Error state currently surfaces as simple text in header when no update is available
 - Release channel depends on GitHub provider artifacts produced by electron-builder
 
@@ -192,14 +195,3 @@ Release expectations:
 - Toasts: src/renderer/features/ui/ToastContainer.tsx
 - Main-process splash: src/main/resources/splash.html
 - Theme tokens: src/renderer/styles/globals.css
-
-## 9. Notes On Removed Or Avoided Patterns
-
-Do not reintroduce:
-- Conflicts-first navigation in the sidebar
-- cyan Tron palette
-- Orbitron/Share Tech Mono as primary identity fonts
-- scanline overlays
-- repeated glow pulses
-- skewed card edges
-- fake terminal boot UI
