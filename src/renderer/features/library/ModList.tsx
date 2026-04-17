@@ -1,11 +1,14 @@
-import React, { useState, useCallback, useEffect } from 'react'
+import React, { useState, useCallback, useEffect, useMemo, useRef, useLayoutEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useAppStore } from '../../store/useAppStore'
+import { shallow } from 'zustand/shallow'
 import { IpcService } from '../../services/IpcService'
 import type { ModMetadata } from '@shared/types'
 import { IPC } from '@shared/types'
-import { ModRow } from './ModRow'
+import { MemoModRow } from './ModRow'
 import { DetailPanel } from './DetailPanel'
 import { ActionPromptDialog } from '../ui/ActionPromptDialog'
+import { Tooltip } from '../ui/Tooltip'
 import type { LibraryStatusFilter } from '../../store/slices/createLibrarySlice'
 
 interface ContextMenuState {
@@ -21,11 +24,18 @@ interface DetailOverlayState {
 
 type PendingActionState =
   | { type: 'delete-all'; count: number }
+  | { type: 'delete-selected'; count: number; modIds: string[] }
+
+type LibrarySortKey = 'name' | 'type' | 'installedAt'
+type SortDirection = 'asc' | 'desc'
+
+const LIBRARY_GRID_TEMPLATE = '72px 64px minmax(280px,1fr) 110px 156px 184px 96px'
 
 export const ModList: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false)
   const [isInstalling, setIsInstalling] = useState(false)
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
+  const contextMenuRef = useRef<HTMLDivElement>(null)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null)
   const [pendingDeleteMod, setPendingDeleteMod] = useState<ModMetadata | null>(null)
@@ -34,6 +44,8 @@ export const ModList: React.FC = () => {
   const [renamingModId, setRenamingModId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState('')
   const [submittingAction, setSubmittingAction] = useState(false)
+  const [sortKey, setSortKey] = useState<LibrarySortKey | null>(null)
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
 
   const {
     filter,
@@ -48,6 +60,8 @@ export const ModList: React.FC = () => {
     addToast,
     mods,
     libraryStatusFilter,
+    setLibraryStatusFilter,
+    requestLibraryDeleteAll,
     libraryDeleteAllRequestedAt,
     clearLibraryDeleteAllRequest,
     settings,
@@ -55,7 +69,31 @@ export const ModList: React.FC = () => {
     updateModMetadata,
     gamePathValid,
     libraryPathValid,
-  } = useAppStore()
+    typeFilter,
+  } = useAppStore((state) => ({
+    filter: state.filter,
+    filteredMods: state.filteredMods,
+    selectMod: state.selectMod,
+    installMod: state.installMod,
+    enableMod: state.enableMod,
+    disableMod: state.disableMod,
+    deleteMod: state.deleteMod,
+    scanMods: state.scanMods,
+    openReinstallPrompt: state.openReinstallPrompt,
+    addToast: state.addToast,
+    mods: state.mods,
+    libraryStatusFilter: state.libraryStatusFilter,
+    setLibraryStatusFilter: state.setLibraryStatusFilter,
+    requestLibraryDeleteAll: state.requestLibraryDeleteAll,
+    libraryDeleteAllRequestedAt: state.libraryDeleteAllRequestedAt,
+    clearLibraryDeleteAllRequest: state.clearLibraryDeleteAllRequest,
+    settings: state.settings,
+    setActiveView: state.setActiveView,
+    updateModMetadata: state.updateModMetadata,
+    gamePathValid: state.gamePathValid,
+    libraryPathValid: state.libraryPathValid,
+    typeFilter: state.typeFilter,
+  }), shallow)
 
   const hasRequiredPaths = Boolean(settings?.gamePath?.trim() && settings?.libraryPath?.trim() && gamePathValid && libraryPathValid)
 
@@ -97,15 +135,56 @@ export const ModList: React.FC = () => {
   const enabledCount = allMods.filter((mod) => mod.enabled).length
   const disabledCount = allMods.filter((mod) => !mod.enabled).length
   const totalCount = allMods.length
+  const baseFilteredMods = useMemo(() => filteredMods().filter((mod) => mod.kind === 'mod'), [mods, filter, typeFilter, filteredMods])
+  const enabledVisibleCount = baseFilteredMods.filter((mod) => mod.enabled).length
+  const disabledVisibleCount = baseFilteredMods.filter((mod) => !mod.enabled).length
 
-  const displayedMods = (() => {
-    const base = filteredMods().filter((mod) => mod.kind === 'mod')
-    if (libraryStatusFilter === 'enabled') return base.filter((mod) => mod.enabled)
-    if (libraryStatusFilter === 'disabled') return base.filter((mod) => !mod.enabled)
-    return base
-  })()
-  const selectedSet = new Set(selectedIds)
-  const allModsEnabled = totalCount > 0 && enabledCount === totalCount
+  const displayedMods = useMemo(() => {
+    const filteredByStatus = libraryStatusFilter === 'enabled'
+      ? baseFilteredMods.filter((mod) => mod.enabled)
+      : libraryStatusFilter === 'disabled'
+        ? baseFilteredMods.filter((mod) => !mod.enabled)
+        : baseFilteredMods
+
+    if (sortKey === null) return filteredByStatus
+
+    const sorted = [...filteredByStatus].sort((left, right) => {
+      if (sortKey === 'name') {
+        return left.name.localeCompare(right.name, undefined, { sensitivity: 'base' })
+      }
+
+      if (sortKey === 'type') {
+        return left.type.localeCompare(right.type, undefined, { sensitivity: 'base' })
+      }
+
+      const leftTime = left.installedAt ? new Date(left.installedAt).getTime() : 0
+      const rightTime = right.installedAt ? new Date(right.installedAt).getTime() : 0
+      return leftTime - rightTime
+    })
+
+    return sortDirection === 'asc' ? sorted : sorted.reverse()
+  }, [baseFilteredMods, libraryStatusFilter, sortDirection, sortKey])
+  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds])
+  const selectedMods = useMemo(() => allMods.filter((mod) => selectedIds.includes(mod.uuid)), [allMods, selectedIds])
+  const selectedModsPreview = useMemo(() => selectedMods.slice(0, 6), [selectedMods])
+  const loadOrderMap = useMemo(() => {
+    const map = new Map<string, number>()
+    allMods.forEach((mod, i) => map.set(mod.uuid, i + 1))
+    return map
+  }, [allMods])
+  const visibleModIds = displayedMods.map((mod) => mod.uuid)
+  const visibleEnabledCount = displayedMods.filter((mod) => mod.enabled).length
+  const allVisibleEnabled = displayedMods.length > 0 && visibleEnabledCount === displayedMods.length
+  const bulkSelectionActive = selectedIds.length > 1
+  const bulkToggleDisabled = libraryStatusFilter !== 'all'
+  const bulkToggleTooltip = libraryStatusFilter === 'enabled'
+    ? 'Unavailable while Enabled filter is active'
+    : 'Unavailable while Disabled filter is active'
+
+  const sortStateFor = (key: LibrarySortKey): 'ascending' | 'descending' | 'none' => {
+    if (sortKey !== key) return 'none'
+    return sortDirection === 'asc' ? 'ascending' : 'descending'
+  }
 
   useEffect(() => {
     setSelectedIds((current) => current.filter((id) => allMods.some((mod) => mod.uuid === id)))
@@ -128,6 +207,7 @@ export const ModList: React.FC = () => {
 
       const target = event.target as HTMLElement | null
       if (target?.closest('[data-mod-row="true"]')) return
+      if (target?.closest('[data-bulk-actions="true"]')) return
 
       setSelectedIds([])
       setLastSelectedIndex(null)
@@ -204,6 +284,20 @@ export const ModList: React.FC = () => {
     await handleInstallFile(result.filePaths[0])
   }
 
+  const handleSort = (nextKey: LibrarySortKey) => {
+    if (sortKey === nextKey) {
+      if (sortDirection === 'asc') {
+        setSortDirection('desc')
+      } else {
+        setSortKey(null)
+      }
+      return
+    }
+
+    setSortKey(nextKey)
+    setSortDirection('asc')
+  }
+
   const handleDragOver = (event: React.DragEvent) => {
     event.preventDefault()
     event.stopPropagation()
@@ -239,14 +333,24 @@ export const ModList: React.FC = () => {
     event.preventDefault()
     event.stopPropagation()
     selectMod(mod.uuid)
-
-    const menuWidth = 240
-    const menuHeight = 220
-    const x = Math.min(event.clientX, window.innerWidth - menuWidth - 16)
-    const y = Math.min(event.clientY, window.innerHeight - menuHeight - 16)
-
-    setContextMenu({ mod, x, y })
+    setContextMenu({ mod, x: event.clientX, y: event.clientY })
   }
+
+  useLayoutEffect(() => {
+    if (!contextMenu || !contextMenuRef.current) return
+    const el = contextMenuRef.current
+    const rect = el.getBoundingClientRect()
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    let x = contextMenu.x
+    let y = contextMenu.y
+    if (x + rect.width > vw - 8) x = vw - rect.width - 8
+    if (y + rect.height > vh - 8) y = vh - rect.height - 8
+    if (x < 8) x = 8
+    if (y < 8) y = 8
+    el.style.left = `${x}px`
+    el.style.top = `${y}px`
+  }, [contextMenu])
 
   const handleRowSelect = (event: React.MouseEvent, mod: ModMetadata, index: number) => {
     if (mod.kind !== 'mod') {
@@ -342,6 +446,41 @@ export const ModList: React.FC = () => {
     }
   }, [allMods, addToast, deleteMod])
 
+  const handleDeleteSelected = useCallback(async (modIds: string[]) => {
+    const targets = allMods.filter((mod) => modIds.includes(mod.uuid))
+    if (targets.length === 0) {
+      setPendingAction(null)
+      addToast('No selected mods to delete', 'info')
+      return
+    }
+
+    setPendingAction(null)
+    setSubmittingAction(true)
+    let removed = 0
+    let failed = 0
+
+    for (const mod of targets) {
+      const result = await deleteMod(mod.uuid)
+      if (result.ok) {
+        removed += 1
+      } else {
+        failed += 1
+      }
+    }
+
+    setSubmittingAction(false)
+    setPendingAction(null)
+    setSelectedIds([])
+    setLastSelectedIndex(null)
+
+    if (removed > 0) {
+      addToast(`${removed} mod${removed === 1 ? '' : 's'} deleted from selection`, 'success')
+    }
+    if (failed > 0) {
+      addToast(`${failed} mod${failed === 1 ? '' : 's'} could not be deleted`, 'warning')
+    }
+  }, [allMods, addToast, deleteMod])
+
   const handleContextEnable = async () => {
     if (!contextMenu) return
     const result = await enableMod(contextMenu.mod.uuid)
@@ -429,7 +568,14 @@ export const ModList: React.FC = () => {
     setRenameValue('')
   }
 
+  const browseLikeButtonClass = 'flex h-10 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-sm border-[0.5px] px-4 text-[10px] brand-font font-bold uppercase tracking-widest transition-colors'
+  const darkBrowseLikeButtonClass = `${browseLikeButtonClass} border-[#fcee09]/30 bg-[#0a0a0a] text-[#fcee09] hover:bg-[#fcee09] hover:text-[#050505]`
+  const activeBrowseLikeButtonClass = `${browseLikeButtonClass} border-[#fcee09] bg-[#fcee09] text-[#050505]`
+  const destructiveButtonClass = `${browseLikeButtonClass} border-[#5b1818] bg-[#160707] text-[#f18d8d] hover:border-[#f87171] hover:bg-[#2a0909] hover:text-[#ffe1e1]`
+  const disabledBrowseLikeButtonClass = `${browseLikeButtonClass} cursor-not-allowed border-[#303030] bg-[#131313] text-[#666666] shadow-none`
+
   return (
+    <div className="h-full pb-16 animate-settings-in">
     <div
       className="flex h-full overflow-hidden relative select-none"
       onDragOver={handleDragOver}
@@ -450,7 +596,7 @@ export const ModList: React.FC = () => {
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="hyperion-scrollbar managed-mods-scroll flex-1 overflow-y-auto">
         <div className="p-8 pb-24 max-w-[1600px] mx-auto">
           <div className="flex justify-between items-end mb-8">
             <div>
@@ -460,52 +606,109 @@ export const ModList: React.FC = () => {
               <p className="text-[#9a9a9a] text-xs mt-1.5 flex items-center gap-2 font-mono tracking-tight">
                 TOTAL: {totalCount} &nbsp;|&nbsp; ACTIVE: {enabledCount}
               </p>
-              <p className="text-[#7a7a7a] text-[10px] mt-2 font-mono uppercase tracking-[0.18em]">
-                Shift+Click selects ranges. Ctrl+A selects every visible mod.
+              <p className="text-[#818181] text-[10px] mt-2 font-mono uppercase tracking-[0.18em] leading-relaxed">
+                Tip: Shift+Click selects ranges. Ctrl+Click adds single mods. Ctrl+A selects every visible mod and opens bulk actions.
               </p>
+              <div className="mt-4 flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => setLibraryStatusFilter('all')}
+                  className={`${browseLikeButtonClass} ${
+                    libraryStatusFilter === 'all'
+                      ? 'border-[#4fd8ff] bg-[#4fd8ff] text-[#051218]'
+                      : 'border-[#1f4c57] bg-transparent text-[#88dceb] hover:border-[#4fd8ff] hover:text-[#b8f3ff]'
+                  }`}
+                >
+                  <span className="brand-font font-bold">All</span>
+                </button>
+                <button
+                  onClick={() => setLibraryStatusFilter('enabled')}
+                  className={`${libraryStatusFilter === 'enabled' ? activeBrowseLikeButtonClass : darkBrowseLikeButtonClass} inline-flex gap-2`}
+                >
+                  <span className="brand-font font-bold">Enabled</span>
+                </button>
+                <button
+                  onClick={() => setLibraryStatusFilter('disabled')}
+                  className={`${libraryStatusFilter === 'disabled' ? activeBrowseLikeButtonClass : darkBrowseLikeButtonClass} inline-flex gap-2`}
+                >
+                  <span className="brand-font font-bold">Disabled</span>
+                </button>
+              </div>
             </div>
 
             <div className="flex flex-nowrap gap-3 items-center justify-end">
-              <div className="flex shrink-0 items-center gap-3 border-[0.5px] border-[#1a1a1a] bg-[#090909] px-4 py-2 rounded-sm">
+              <Tooltip content="Delete every mod from the current library">
                 <button
-                  onClick={() => runBulkToggle(allMods.map((mod) => mod.uuid), allModsEnabled ? 'disable' : 'enable')}
-                  className="group flex items-center gap-3 whitespace-nowrap"
-                  title={allModsEnabled ? 'Disable all mods' : 'Enable all mods'}
+                  onClick={() => requestLibraryDeleteAll()}
+                  className={destructiveButtonClass}
                 >
-                  <div className={`relative h-6 w-12 rounded-full border-[0.5px] transition-all ${allModsEnabled ? 'border-[#fcee09]/50 bg-[#241f04]' : 'border-[#222] bg-[#101010]'}`}>
-                    <div className={`absolute top-1/2 h-[18px] w-[18px] -translate-y-1/2 rounded-full transition-all ${allModsEnabled ? 'right-[2px] bg-[#fcee09] shadow-[0_0_10px_rgba(252,238,9,0.45)]' : 'left-[2px] bg-[#7a7a7a]'}`} />
-                  </div>
-                  <span className={`text-[10px] brand-font font-semibold uppercase tracking-[0.18em] ${allModsEnabled ? 'text-[#fcee09]' : 'text-[#8a8a8a] group-hover:text-white'}`}>
-                    {allModsEnabled ? 'Disable All' : 'Enable All'}
-                  </span>
+                  <span className="material-symbols-outlined text-[16px]">delete_sweep</span>
+                  Delete All
                 </button>
-                <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-[#8a8a8a]">
-                  {enabledCount}/{totalCount}
+              </Tooltip>
+
+              <Tooltip content={bulkToggleDisabled ? bulkToggleTooltip : allVisibleEnabled ? 'Disable every visible mod' : 'Enable every visible mod'}>
+                <span className="inline-flex">
+                  <button
+                    onClick={() => runBulkToggle(visibleModIds, allVisibleEnabled ? 'disable' : 'enable')}
+                    disabled={bulkToggleDisabled}
+                    className={`${bulkToggleDisabled ? disabledBrowseLikeButtonClass : allVisibleEnabled ? darkBrowseLikeButtonClass : activeBrowseLikeButtonClass} shadow-[0_0_16px_rgba(252,238,9,0.1)]`}
+                  >
+                    <span className="brand-font text-[10px] font-bold uppercase tracking-[0.18em]">
+                      {allVisibleEnabled ? 'Disable All' : 'Enable All'}
+                    </span>
+                  </button>
                 </span>
-              </div>
+              </Tooltip>
 
               <button
                 onClick={handleInstallClick}
-                className="flex shrink-0 items-center gap-2 whitespace-nowrap px-4 py-2 bg-[#fcee09] text-[#050505] hover:bg-white rounded-sm text-xs brand-font font-bold uppercase tracking-widest transition-colors shadow-[0_0_20px_rgba(252,238,9,0.15)]"
+                className="flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-sm bg-[#fcee09] px-4 text-xs brand-font font-bold uppercase tracking-widest text-[#050505] transition-colors shadow-[0_0_20px_rgba(252,238,9,0.15)] hover:bg-white"
               >
                 <span className="material-symbols-outlined text-[16px]">add</span>
-                Add Mod
+                Install Mod
               </button>
             </div>
           </div>
 
           <div className="bg-[#050505] rounded-sm border-[0.5px] border-[#1a1a1a] overflow-hidden shadow-[0_6px_18px_rgba(0,0,0,0.24)]">
             <div
-              className="grid gap-4 px-6 py-3 border-b-[0.5px] border-[#1a1a1a] bg-[#070707]"
-              style={{ gridTemplateColumns: '56px 36px minmax(200px,1fr) 100px 130px 160px 88px' }}
+              className="grid gap-4 px-6 py-0 border-b-[0.5px] border-[#1a1a1a] bg-[#070707]"
+              style={{ gridTemplateColumns: LIBRARY_GRID_TEMPLATE }}
             >
-                <span className="pl-2 text-[9px] uppercase tracking-widest text-[#8a8a8a] brand-font font-bold whitespace-nowrap">Status</span>
-                <span className="text-[9px] uppercase tracking-widest text-[#8a8a8a] brand-font font-bold">#</span>
-                <span className="text-[9px] uppercase tracking-widest text-[#8a8a8a] brand-font font-bold">Mod Name</span>
-                <span className="text-[9px] uppercase tracking-widest text-[#8a8a8a] brand-font font-bold">Version</span>
-                <span className="text-[9px] uppercase tracking-widest text-[#8a8a8a] brand-font font-bold">Type</span>
-                <span className="text-[9px] uppercase tracking-widest text-[#8a8a8a] brand-font font-bold">Installed</span>
-                <span className="text-[9px] uppercase tracking-widest text-[#8a8a8a] brand-font font-bold text-right">Actions</span>
+                <div className="flex h-10 items-center pl-2 text-[9px] uppercase tracking-widest text-[#8a8a8a] brand-font font-bold whitespace-nowrap">Status</div>
+                <div className="flex h-10 items-center text-[10px] uppercase tracking-widest text-[#9d9d9d] brand-font font-bold">#</div>
+                <button
+                  onClick={() => handleSort('name')}
+                  aria-label={`Sort by mod name${sortKey === 'name' ? `, currently ${sortDirection === 'asc' ? 'ascending' : 'descending'}` : ''}`}
+                  className="flex h-10 w-full items-center justify-start gap-0.5 text-left"
+                >
+                  <span className={`text-[10px] uppercase tracking-widest brand-font font-bold ${sortKey === 'name' ? 'text-[#fcee09]' : 'text-[#9d9d9d] hover:text-[#fcee09]'}`}>
+                    Mod Name
+                  </span>
+                  <span className={`material-symbols-outlined text-[8px] leading-none ${sortKey === 'name' ? 'text-[#fcee09]' : 'text-[#727272]'}`} aria-hidden="true">{sortKey === 'name' ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward') : 'unfold_more'}</span>
+                </button>
+                <div className="flex h-10 items-center text-[9px] uppercase tracking-widest text-[#8a8a8a] brand-font font-bold">Version</div>
+                <button
+                  onClick={() => handleSort('type')}
+                  aria-label={`Sort by type${sortKey === 'type' ? `, currently ${sortDirection === 'asc' ? 'ascending' : 'descending'}` : ''}`}
+                  className="flex h-10 w-full items-center justify-start gap-0.5 text-left"
+                >
+                  <span className={`text-[10px] uppercase tracking-widest brand-font font-bold ${sortKey === 'type' ? 'text-[#fcee09]' : 'text-[#9d9d9d] hover:text-[#fcee09]'}`}>
+                    Type
+                  </span>
+                  <span className={`material-symbols-outlined text-[8px] leading-none ${sortKey === 'type' ? 'text-[#fcee09]' : 'text-[#727272]'}`} aria-hidden="true">{sortKey === 'type' ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward') : 'unfold_more'}</span>
+                </button>
+                <button
+                  onClick={() => handleSort('installedAt')}
+                  aria-label={`Sort by installed date${sortKey === 'installedAt' ? `, currently ${sortDirection === 'asc' ? 'ascending' : 'descending'}` : ''}`}
+                  className="flex h-10 w-full items-center justify-start gap-0.5 text-left"
+                >
+                  <span className={`text-[10px] uppercase tracking-widest brand-font font-bold ${sortKey === 'installedAt' ? 'text-[#fcee09]' : 'text-[#9d9d9d] hover:text-[#fcee09]'}`}>
+                    Date
+                  </span>
+                  <span className={`material-symbols-outlined text-[8px] leading-none ${sortKey === 'installedAt' ? 'text-[#fcee09]' : 'text-[#727272]'}`} aria-hidden="true">{sortKey === 'installedAt' ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward') : 'unfold_more'}</span>
+                </button>
+                <div className="flex h-10 items-center justify-end text-[9px] uppercase tracking-widest text-[#8a8a8a] brand-font font-bold">Actions</div>
             </div>
 
             {displayedMods.length === 0 ? (
@@ -516,29 +719,29 @@ export const ModList: React.FC = () => {
                     ? 'No mods match the search'
                     : totalCount === 0
                       ? 'No mods installed'
-                      : libraryStatusFilter === 'disabled' && disabledCount === 0
+                      : libraryStatusFilter === 'disabled' && disabledVisibleCount === 0
                         ? 'No disabled mods'
-                        : libraryStatusFilter === 'enabled' && enabledCount === 0
+                        : libraryStatusFilter === 'enabled' && enabledVisibleCount === 0
                           ? 'No enabled mods'
                           : 'No mods available'}
                 </span>
                 {totalCount === 0 && !filter && (
                   <button
-                    onClick={handleInstallClick}
+                    onClick={() => setActiveView('downloads')}
                     className="flex items-center gap-2 px-4 py-2 bg-[#fcee09] text-[#050505] rounded-sm text-xs brand-font font-bold uppercase tracking-widest hover:bg-white transition-colors mt-2"
                   >
-                    <span className="material-symbols-outlined text-[16px]">add</span>
-                    Install first mod
+                    <span className="material-symbols-outlined text-[16px]">download</span>
+                    Downloads
                   </button>
                 )}
               </div>
             ) : (
               <div>
                 {displayedMods.map((mod, index) => (
-                  <ModRow
+                  <MemoModRow
                     key={mod.uuid}
                     mod={mod}
-                    index={index + 1}
+                    index={loadOrderMap.get(mod.uuid) ?? index + 1}
                     selected={selectedSet.has(mod.uuid)}
                     onSelect={(event) => handleRowSelect(event, mod, index)}
                     onContextMenu={handleRowContextMenu}
@@ -570,8 +773,9 @@ export const ModList: React.FC = () => {
         />
       )}
 
-      {contextMenu && (
+      {contextMenu && createPortal(
         <div
+          ref={contextMenuRef}
           className="fixed z-[100] bg-[#0a0a0a] border-[0.5px] border-[#222] shadow-[0_10px_30px_rgba(0,0,0,0.5)] py-1 min-w-[220px] brand-font"
           style={{ left: contextMenu.x, top: contextMenu.y }}
           onClick={(event) => event.stopPropagation()}
@@ -627,7 +831,8 @@ export const ModList: React.FC = () => {
             <span className="material-symbols-outlined text-[16px]">delete</span>
             <span>Delete</span>
           </button>
-        </div>
+        </div>,
+        document.body
       )}
 
       {pendingDeleteMod && (
@@ -662,6 +867,88 @@ export const ModList: React.FC = () => {
           submitting={submittingAction}
         />
       )}
+      {pendingAction?.type === 'delete-selected' && (
+        <ActionPromptDialog
+          accentColor="#ff4d4f"
+          accentGlow="rgba(255,77,79,0.4)"
+          title="Delete Selected Mods"
+          description="This permanently deletes every selected mod from the current library. Enabled mods are removed from the game first, then erased from disk."
+          detailLabel="Selected mods"
+          detailValue={String(pendingAction.count)}
+          detailContent={(
+            <div className="px-4 py-3">
+              <div className="flex items-center justify-between gap-3 border-b-[0.5px] border-[#1d1d1d] pb-3">
+                <div className="text-[9px] font-mono uppercase tracking-[0.18em] text-[#8d8d8d]">
+                  Mods being uninstalled
+                </div>
+                <div className="rounded-sm border-[0.5px] border-[#4a1c1c] bg-[#160909] px-2 py-1 text-[9px] font-mono uppercase tracking-[0.14em] text-[#ffb4ab]">
+                  {pendingAction.count} selected
+                </div>
+              </div>
+              <div className="mt-3 space-y-2">
+                {selectedModsPreview.map((mod) => (
+                  <div
+                    key={mod.uuid}
+                    className="rounded-sm border-[0.5px] border-[#2c1515] bg-[#120909] px-3 py-2 text-[12px] text-[#ffe1e1] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]"
+                  >
+                    {mod.name}
+                  </div>
+                ))}
+                {selectedMods.length > selectedModsPreview.length && (
+                  <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-[#8d8d8d]">
+                    + {selectedMods.length - selectedModsPreview.length} more mod(s)
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          icon="delete"
+          primaryLabel="Delete Selected"
+          primaryTextColor="#ffffff"
+          onPrimary={() => void handleDeleteSelected(pendingAction.modIds)}
+          onCancel={() => setPendingAction(null)}
+          submitting={submittingAction}
+        />
+      )}
+      {bulkSelectionActive && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-6 z-[120] flex justify-center px-6">
+          <div data-bulk-actions="true" className="pointer-events-auto flex items-stretch gap-4 rounded-sm border-[0.5px] border-[#2e2e2e] bg-[#080808] p-2 shadow-[0_10px_30px_rgba(0,0,0,0.45)]">
+            <button
+              onClick={() => void runBulkToggle(selectedIds, 'enable')}
+              className={`${darkBrowseLikeButtonClass} gap-1.5 px-4 text-[9px]`}
+            >
+              <span className="material-symbols-outlined text-[15px]">check_circle</span>
+              Enable
+            </button>
+            <button
+              onClick={() => void runBulkToggle(selectedIds, 'disable')}
+              className={`${darkBrowseLikeButtonClass} gap-1.5 px-4 text-[9px]`}
+            >
+              <span className="material-symbols-outlined text-[15px]">do_not_disturb_on</span>
+              Disable
+            </button>
+            <button
+              onClick={() => setPendingAction({ type: 'delete-selected', count: selectedIds.length, modIds: [...selectedIds] })}
+              className={`${destructiveButtonClass} gap-1.5 px-4 text-[9px]`}
+            >
+              <span className="material-symbols-outlined text-[15px]">delete</span>
+              Uninstall
+            </button>
+            <div className="mx-1.5 h-5 self-center w-px bg-[#2a2a2a] shadow-[0_0_6px_rgba(255,255,255,0.06)]" />
+            <button
+              onClick={() => {
+                setSelectedIds([])
+                setLastSelectedIndex(null)
+                selectMod(null)
+              }}
+              className="flex h-10 w-10 items-center justify-center rounded-sm border-[0.5px] border-[#242424] bg-[#0b0b0b] text-[#8a8a8a] transition-colors hover:border-[#5d5d5d] hover:text-white"
+            >
+              <span className="material-symbols-outlined text-[15px]">close</span>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
     </div>
   )
 }

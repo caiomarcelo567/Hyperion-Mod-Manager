@@ -1,5 +1,6 @@
 import React from 'react'
 import { useAppStore } from '../../store/useAppStore'
+import { shallow } from 'zustand/shallow'
 import { IpcService } from '../../services/IpcService'
 import { IPC } from '@shared/types'
 
@@ -12,7 +13,13 @@ interface NavItem {
 }
 
 export const Sidebar: React.FC = () => {
-  const { activeView, setActiveView, addToast, settings, gamePathValid } = useAppStore()
+  const { activeView, setActiveView, addToast, settings, gamePathValid } = useAppStore((state) => ({
+    activeView: state.activeView,
+    setActiveView: state.setActiveView,
+    addToast: state.addToast,
+    settings: state.settings,
+    gamePathValid: state.gamePathValid,
+  }), shallow)
 
   const navItems: NavItem[] = [
     { icon: 'inventory_2', label: 'Mod Library', action: () => setActiveView('library'), active: activeView === 'library' },
@@ -26,7 +33,7 @@ export const Sidebar: React.FC = () => {
     active: activeView === 'settings',
   }
 
-  const itemClass = (active?: boolean, disabled?: boolean) => `relative flex h-12 w-full items-center gap-4 pl-7 pr-6 text-left transition-all duration-300 ${
+  const itemClass = (active?: boolean, disabled?: boolean) => `relative flex h-12 w-full items-center gap-4 pl-7 pr-6 text-left transition-[background-color,color] duration-200 ${
     active
       ? 'text-[#fcee09] bg-[#0a0a0a] before:absolute before:left-0 before:w-[2px] before:h-8 before:bg-[#fcee09] before:top-1/2 before:-translate-y-1/2'
       : disabled
@@ -50,8 +57,8 @@ export const Sidebar: React.FC = () => {
   }
 
   return (
-    <nav className="group/sidebar fixed left-0 top-14 bottom-0 z-40 flex w-20 flex-col overflow-hidden border-r-[0.5px] border-[#1a1a1a] bg-[#050505] py-8 text-sm tracking-tight text-[#fcee09] transition-[width] duration-300 hover:w-64 brand-font font-semibold">
-      <div className="mb-8 flex items-center gap-4 whitespace-nowrap px-6 opacity-0 transition-opacity duration-300 group-hover/sidebar:opacity-100">
+    <nav className="group/sidebar slide-in-left fixed left-0 top-14 bottom-0 z-40 flex w-20 flex-col overflow-hidden border-r-[0.5px] border-[#1a1a1a] bg-[#050505] py-8 text-sm tracking-tight text-[#fcee09] hover:w-64 transition-[width] duration-200 ease-in-out [will-change:width] [contain:layout_paint] [transform:translateZ(0)] brand-font font-semibold">
+      <div className="mb-8 flex items-center gap-4 whitespace-nowrap px-6 opacity-0 transition-opacity duration-150 group-hover/sidebar:opacity-100">
         <div className="ml-[2px] flex h-10 w-10 shrink-0 items-center justify-center rounded-sm border-[0.5px] border-[#222] bg-[#111] text-[#e5e2e1]">
           <span className="material-symbols-outlined text-[18px]">terminal</span>
         </div>
@@ -68,7 +75,6 @@ export const Sidebar: React.FC = () => {
             onClick={item.action}
             disabled={item.disabled}
             className={itemClass(item.active, item.disabled)}
-            title={item.label}
           >
             <span className={`material-symbols-outlined flex h-6 w-6 shrink-0 items-center justify-center ${item.active ? 'drop-shadow-[0_0_4px_rgba(252,238,9,0.3)]' : ''}`}>
               {item.icon}
@@ -83,7 +89,6 @@ export const Sidebar: React.FC = () => {
         <button
           onClick={settingsItem.action}
           className={itemClass(settingsItem.active)}
-          title={settingsItem.label}
         >
           <span className={`material-symbols-outlined flex h-6 w-6 shrink-0 items-center justify-center ${settingsItem.active ? 'drop-shadow-[0_0_4px_rgba(252,238,9,0.3)]' : ''}`}>
             {settingsItem.icon}
@@ -97,17 +102,16 @@ export const Sidebar: React.FC = () => {
         <button
           onClick={handleLaunchGame}
           disabled={!settings?.gamePath || !gamePathValid}
-          className={`w-full overflow-hidden rounded-sm px-2 py-3 text-xs font-bold tracking-widest whitespace-nowrap transition-all duration-300 ${
+          className={`w-full overflow-hidden rounded-sm px-2 py-3 text-xs font-bold tracking-widest whitespace-nowrap transition-[background-color,color,box-shadow] duration-150 ${
             !settings?.gamePath || !gamePathValid
               ? 'bg-[#262626] text-[#8a8a8a] cursor-not-allowed'
               : 'bg-[#fcee09] text-[#050505] hover:bg-white shadow-[0_0_20px_rgba(252,238,9,0.15)]'
           }`}
-          title="Launch Game"
         >
           <span className="flex items-center justify-center">
             <span className="material-symbols-outlined shrink-0 text-[18px]">play_arrow</span>
-            <span className="grid [grid-template-columns:0fr] items-center transition-[grid-template-columns,margin] duration-300 group-hover/sidebar:ml-2 group-hover/sidebar:[grid-template-columns:1fr]">
-              <span className="overflow-hidden whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover/sidebar:opacity-100">
+            <span className="grid [grid-template-columns:0fr] items-center transition-[grid-template-columns,margin] duration-150 group-hover/sidebar:ml-2 group-hover/sidebar:[grid-template-columns:1fr]">
+              <span className="overflow-hidden whitespace-nowrap opacity-0 transition-opacity duration-150 group-hover/sidebar:opacity-100">
                 LAUNCH GAME
               </span>
             </span>

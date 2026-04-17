@@ -46,6 +46,11 @@ export interface AppSettings {
   autoUpdate: boolean
 }
 
+export interface PathDefaults {
+  libraryPath: string
+  downloadPath: string
+}
+
 export interface DownloadEntry {
   path: string
   name: string
@@ -141,6 +146,7 @@ export const IPC = {
   // Settings
   GET_SETTINGS: 'settings:get',
   SET_SETTINGS: 'settings:set',
+  GET_PATH_DEFAULTS: 'settings:getPathDefaults',
 
   // Mods
   SCAN_MODS: 'mods:scan',

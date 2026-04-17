@@ -106,30 +106,6 @@ select,
   to   { transform: rotate(360deg); }
 }
 
-@keyframes bg-drift {
-  from { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(0.6%, -0.4%, 0); }
-  to { transform: translate3d(0, 0, 0); }
-}
-
-@keyframes star-pan-slow {
-  from { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(-0.8%, 0.5%, 0); }
-  to { transform: translate3d(-1.6%, 1%, 0); }
-}
-
-@keyframes star-pan-mid {
-  from { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(1.1%, -0.8%, 0); }
-  to { transform: translate3d(2.2%, -1.6%, 0); }
-}
-
-@keyframes star-pan-fast {
-  from { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(-1.6%, 0.9%, 0); }
-  to { transform: translate3d(-3.2%, 1.8%, 0); }
-}
-
 /* ── Utility classes ── */
 .fade-up       { animation: fade-up 0.2s ease-out both; }
 .fade-in       { animation: fade-in 0.2s ease-out both; }
@@ -147,56 +123,39 @@ select,
   overflow: hidden;
   pointer-events: none;
   z-index: 0;
+  contain: strict;
   background:
-    radial-gradient(circle at top, rgba(255, 244, 178, 0.014), transparent 24%),
-    linear-gradient(180deg, rgba(2, 2, 2, 0.92), rgba(5, 5, 5, 0.98)),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.008), transparent 22%),
+    radial-gradient(circle at 14% 0%, rgba(252, 238, 9, 0.03), transparent 24%),
+    radial-gradient(circle at 82% 16%, rgba(255, 255, 255, 0.018), transparent 28%),
+    linear-gradient(180deg, rgba(6, 6, 6, 0.88), rgba(5, 5, 5, 0.98) 42%, rgba(5, 5, 5, 1) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.008), transparent 18%),
     #050505;
 }
 
-.hyperion-stars {
+.hyperion-bg::before,
+.hyperion-bg::after {
+  content: '';
   position: absolute;
-  will-change: transform;
+  inset: 0;
 }
 
-.hyperion-stars {
-  inset: -12%;
+.hyperion-bg::before {
+  inset: -10%;
+  opacity: 0.16;
+  background-image:
+    radial-gradient(circle, rgba(255, 247, 205, 0.15) 0 0.7px, transparent 1px),
+    radial-gradient(circle, rgba(255, 247, 205, 0.08) 0 0.9px, transparent 1.2px);
+  background-position: 18px 24px, 140px 88px;
+  background-size: 240px 240px, 360px 360px;
   background-repeat: repeat;
-  background-size: 360px 360px;
-  opacity: 0.1;
 }
 
-.hyperion-stars-back {
-  background-image:
-    radial-gradient(circle at 22px 30px, rgba(255, 247, 205, 0.18) 0 1px, transparent 1.4px),
-    radial-gradient(circle at 180px 120px, rgba(255, 247, 205, 0.12) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 320px 300px, rgba(255, 247, 205, 0.1) 0 1px, transparent 1.4px),
-    radial-gradient(circle at 92px 250px, rgba(255, 247, 205, 0.08) 0 1px, transparent 1.6px);
-  animation: star-pan-slow 180s linear infinite alternate;
-}
-
-.hyperion-stars-mid {
-  inset: -16%;
-  background-size: 280px 280px;
-  opacity: 0.12;
-  background-image:
-    radial-gradient(circle at 40px 48px, rgba(255, 244, 178, 0.38) 0 1.1px, transparent 1.8px),
-    radial-gradient(circle at 190px 80px, rgba(255, 244, 178, 0.24) 0 1.1px, transparent 1.9px),
-    radial-gradient(circle at 120px 200px, rgba(255, 244, 178, 0.22) 0 1.1px, transparent 1.9px),
-    radial-gradient(circle at 246px 236px, rgba(255, 244, 178, 0.3) 0 1.1px, transparent 1.8px);
-  animation: star-pan-mid 140s linear infinite alternate;
-}
-
-.hyperion-stars-front {
-  inset: -20%;
-  background-size: 220px 220px;
-  opacity: 0.14;
-  background-image:
-    radial-gradient(circle at 28px 42px, rgba(255, 248, 212, 0.46) 0 1.2px, transparent 2px),
-    radial-gradient(circle at 118px 148px, rgba(255, 248, 212, 0.28) 0 1.2px, transparent 2px),
-    radial-gradient(circle at 186px 90px, rgba(255, 248, 212, 0.24) 0 1.2px, transparent 2px),
-    radial-gradient(circle at 200px 204px, rgba(255, 248, 212, 0.38) 0 1.2px, transparent 2px);
-  animation: star-pan-fast 100s linear infinite alternate;
+.hyperion-bg::after {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 16%),
+    radial-gradient(circle at 20% 18%, rgba(255, 248, 212, 0.03), transparent 20%),
+    radial-gradient(circle at 78% 24%, rgba(255, 248, 212, 0.016), transparent 18%),
+    radial-gradient(circle at bottom, rgba(0, 0, 0, 0.28), transparent 42%);
 }
 
 .hyperion-content {
@@ -231,6 +190,39 @@ select,
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.18); }
+
+.hyperion-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(94, 88, 49, 0.9) rgba(8, 8, 8, 0.96);
+}
+
+.hyperion-scrollbar::-webkit-scrollbar {
+  width: 7px;
+}
+
+.hyperion-scrollbar::-webkit-scrollbar-track {
+  background: rgba(8, 8, 8, 0.96);
+}
+
+.hyperion-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(94, 88, 49, 0.9);
+  border-radius: 999px;
+}
+
+.hyperion-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(122, 114, 62, 0.95);
+}
+
+.managed-mods-scroll {
+  contain: layout paint;
+  will-change: scroll-position;
+}
+
+.library-mod-row {
+  contain: layout paint style;
+  content-visibility: auto;
+  contain-intrinsic-size: 54px;
+}
 
 ::selection { background: rgba(252, 238, 9, 0.2); color: #fff; }
 

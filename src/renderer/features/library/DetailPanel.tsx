@@ -3,6 +3,7 @@ import type { ModMetadata } from '@shared/types'
 import { IPC } from '@shared/types'
 import { IpcService } from '../../services/IpcService'
 import { useAppStore } from '../../store/useAppStore'
+import { Tooltip } from '../ui/Tooltip'
 
 interface DetailPanelProps {
   modId: string
@@ -150,34 +151,38 @@ export const DetailPanel: React.FC<DetailPanelProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setEditingName((value) => !value)}
-              className="flex h-10 w-10 items-center justify-center border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#8a8a8a] hover:border-[#fcee09]/50 hover:text-[#fcee09] hover:shadow-[0_0_10px_rgba(252,238,9,0.1)] transition-all"
-              title="Rename mod"
-            >
-              <span className="material-symbols-outlined text-[18px]">edit</span>
-            </button>
-            <button
-              onClick={handleOpenFolder}
-              className="flex h-10 w-10 items-center justify-center border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#8a8a8a] hover:border-[#fcee09]/50 hover:text-[#fcee09] hover:shadow-[0_0_10px_rgba(252,238,9,0.1)] transition-all"
-              title="Open mod folder"
-            >
-              <span className="material-symbols-outlined text-[18px]">folder_open</span>
-            </button>
-            <button
-              onClick={() => onDeleteRequest(mod)}
-              className="flex h-10 w-10 items-center justify-center border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#8a8a8a] hover:border-[#ff4d4f]/50 hover:text-[#ff4d4f] hover:shadow-[0_0_10px_rgba(255,77,79,0.12)] transition-all"
-              title="Remove mod"
-            >
-              <span className="material-symbols-outlined text-[18px]">delete</span>
-            </button>
-            <button
-              onClick={onClose}
-              className="flex h-10 w-10 items-center justify-center border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#8a8a8a] hover:border-white/20 hover:text-white transition-all"
-              title="Close details"
-            >
-              <span className="material-symbols-outlined text-[18px]">close</span>
-            </button>
+            <Tooltip content="Rename mod">
+              <button
+                onClick={() => setEditingName((value) => !value)}
+                className="flex h-10 w-10 items-center justify-center border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#8a8a8a] hover:border-[#fcee09]/50 hover:text-[#fcee09] hover:shadow-[0_0_10px_rgba(252,238,9,0.1)] transition-all"
+              >
+                <span className="material-symbols-outlined text-[18px]">edit</span>
+              </button>
+            </Tooltip>
+            <Tooltip content="Open mod folder">
+              <button
+                onClick={handleOpenFolder}
+                className="flex h-10 w-10 items-center justify-center border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#8a8a8a] hover:border-[#fcee09]/50 hover:text-[#fcee09] hover:shadow-[0_0_10px_rgba(252,238,9,0.1)] transition-all"
+              >
+                <span className="material-symbols-outlined text-[18px]">folder_open</span>
+              </button>
+            </Tooltip>
+            <Tooltip content="Remove mod">
+              <button
+                onClick={() => onDeleteRequest(mod)}
+                className="flex h-10 w-10 items-center justify-center border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#8a8a8a] hover:border-[#ff4d4f]/50 hover:text-[#ff4d4f] hover:shadow-[0_0_10px_rgba(255,77,79,0.12)] transition-all"
+              >
+                <span className="material-symbols-outlined text-[18px]">delete</span>
+              </button>
+            </Tooltip>
+            <Tooltip content="Close details">
+              <button
+                onClick={onClose}
+                className="flex h-10 w-10 items-center justify-center border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#8a8a8a] hover:border-white/20 hover:text-white transition-all"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </Tooltip>
           </div>
         </div>
 

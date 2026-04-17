@@ -9,7 +9,7 @@ import {
 } from 'electron'
 import fs from 'fs'
 import path from 'path'
-import { loadSettings, saveSettings } from './settings'
+import { getPathDefaults, loadSettings, saveSettings } from './settings'
 import { createSplashWindow } from './splash'
 import { initializeUpdates } from './updater'
 import { registerModManagerHandlers } from './ipc/modManager'
@@ -81,8 +81,6 @@ function collectDownloadEntries(dirPath: string, limit = 500): Array<{
     .slice(0, limit)
 }
 
-// Disable hardware acceleration for stability
-app.disableHardwareAcceleration()
 app.setName('Hyperion')
 
 if (process.platform === 'win32') {
@@ -143,6 +141,7 @@ function createMainWindow(): BrowserWindow {
 function registerGlobalHandlers(): void {
   // Settings
   ipcMain.handle(IPC.GET_SETTINGS, () => loadSettings())
+  ipcMain.handle(IPC.GET_PATH_DEFAULTS, () => getPathDefaults())
   ipcMain.handle(IPC.SET_SETTINGS, (_event, settings) => {
     saveSettings(settings)
     return { ok: true }

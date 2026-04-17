@@ -1,15 +1,20 @@
 import type { StateCreator } from 'zustand'
 import { IPC } from '../../../shared/types'
 import type { AppSettings, IpcResult } from '../../../shared/types'
+import type { PathDefaults } from '../../../shared/types'
 import { IpcService } from '../../services/IpcService'
 
 export interface SettingsSlice {
   settings: AppSettings | null
+  defaultPaths: PathDefaults | null
   gamePathValid: boolean
   libraryPathValid: boolean
   loadSettings: () => Promise<AppSettings>
+  loadDefaultPaths: () => Promise<PathDefaults>
   updateSettings: (partial: Partial<AppSettings>) => Promise<void>
   detectGamePath: () => Promise<IpcResult<string>>
+  checkGamePath: (gamePath?: string) => Promise<boolean>
+  checkLibraryPath: (libraryPath?: string) => Promise<boolean>
   validateGamePath: (gamePath?: string) => Promise<boolean>
   validateLibraryPath: (libraryPath?: string) => Promise<boolean>
 }
@@ -19,6 +24,7 @@ export const createSettingsSlice: StateCreator<SettingsSlice, [], [], SettingsSl
   get
 ) => ({
   settings: null,
+  defaultPaths: null,
   gamePathValid: false,
   libraryPathValid: false,
 
@@ -32,6 +38,12 @@ export const createSettingsSlice: StateCreator<SettingsSlice, [], [], SettingsSl
       libraryPathValid: Boolean(libraryValidation.ok && libraryValidation.data),
     })
     return data
+  },
+
+  loadDefaultPaths: async () => {
+    const defaults = await IpcService.invoke<PathDefaults>(IPC.GET_PATH_DEFAULTS)
+    set({ defaultPaths: defaults })
+    return defaults
   },
 
   updateSettings: async (partial) => {
@@ -49,6 +61,18 @@ export const createSettingsSlice: StateCreator<SettingsSlice, [], [], SettingsSl
   },
 
   detectGamePath: async () => IpcService.invoke<IpcResult<string>>(IPC.DETECT_GAME),
+
+  checkGamePath: async (gamePath) => {
+    const currentPath = gamePath ?? get().settings?.gamePath ?? ''
+    const result = await IpcService.invoke<IpcResult<boolean>>(IPC.VALIDATE_GAME_PATH, currentPath)
+    return Boolean(result.ok && result.data)
+  },
+
+  checkLibraryPath: async (libraryPath) => {
+    const currentPath = libraryPath ?? get().settings?.libraryPath ?? ''
+    const result = await IpcService.invoke<IpcResult<boolean>>(IPC.VALIDATE_LIBRARY_PATH, currentPath)
+    return Boolean(result.ok && result.data)
+  },
 
   validateGamePath: async (gamePath) => {
     const currentPath = gamePath ?? get().settings?.gamePath ?? ''

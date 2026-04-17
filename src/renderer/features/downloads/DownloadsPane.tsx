@@ -4,6 +4,7 @@ import { IpcService } from '../../services/IpcService'
 import type { DownloadEntry, IpcResult } from '@shared/types'
 import { IPC } from '@shared/types'
 import { ActionPromptDialog } from '../ui/ActionPromptDialog'
+import { Tooltip } from '../ui/Tooltip'
 
 const formatSize = (bytes: number): string => {
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`
@@ -130,7 +131,7 @@ export const DownloadsPane: React.FC = () => {
   }
 
   return (
-    <div className="h-full pb-16 animate-settings-in">
+    <div className="h-full overflow-y-auto hyperion-scrollbar pb-16 animate-settings-in">
       <div className="max-w-6xl mx-auto px-8 py-10">
         <div className="flex items-end justify-between mb-6 gap-6">
           <div>
@@ -232,13 +233,14 @@ export const DownloadsPane: React.FC = () => {
                           'Install'
                         )}
                       </button>
-                      <button
-                        onClick={() => setPendingDeleteDownload(entry)}
-                        className="ml-auto flex h-8 w-8 items-center justify-center rounded-sm border-[0.5px] border-[#222] text-[#8a8a8a] hover:border-[#ff4d4f]/50 hover:text-[#ff4d4f] transition-colors"
-                        title="Delete download"
-                      >
-                        <span className="material-symbols-outlined text-[16px]">delete</span>
-                      </button>
+                      <Tooltip content="Delete download">
+                        <button
+                          onClick={() => setPendingDeleteDownload(entry)}
+                          className="ml-auto flex h-8 w-8 items-center justify-center rounded-sm border-[0.5px] border-[#222] text-[#8a8a8a] hover:border-[#ff4d4f]/50 hover:text-[#ff4d4f] transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">delete</span>
+                        </button>
+                      </Tooltip>
                     </div>
                   </div>
                 )

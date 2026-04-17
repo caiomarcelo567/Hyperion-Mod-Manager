@@ -291,7 +291,7 @@ async function installMod(
     const hashes = await resolveHashes(modDir)
 
     const meta: ModMetadata = {
-      uuid: duplicateMod?.uuid ?? uuidv4(),
+      uuid: (duplicateAction === 'replace' && duplicateMod?.uuid) ? duplicateMod.uuid : uuidv4(),
       name: modName,
       type: modType,
       kind: 'mod',

@@ -3,6 +3,16 @@ import { useAppStore } from '../../store/useAppStore'
 import { IpcService } from '../../services/IpcService'
 import { IPC } from '@shared/types'
 
+function getParentDirectory(targetPath: string): string {
+  const normalizedPath = targetPath.trim().replace(/[\\/]+$/, '')
+  if (!normalizedPath) return ''
+
+  const separatorIndex = Math.max(normalizedPath.lastIndexOf('\\'), normalizedPath.lastIndexOf('/'))
+  if (separatorIndex <= 0) return ''
+
+  return normalizedPath.slice(0, separatorIndex)
+}
+
 export const WelcomeScreen: React.FC = () => {
   const {
     settings,
@@ -12,42 +22,69 @@ export const WelcomeScreen: React.FC = () => {
     purgeMods,
     addToast,
     setActiveView,
+    defaultPaths,
+    loadDefaultPaths,
     detectGamePath,
-    validateGamePath,
-    validateLibraryPath,
+    checkGamePath,
+    checkLibraryPath,
   } = useAppStore()
+
   const [gamePath, setGamePath] = useState('')
   const [libraryPath, setLibraryPath] = useState('')
+  const [downloadPath, setDownloadPath] = useState('')
   const [detectingGame, setDetectingGame] = useState(false)
   const [gamePathValid, setGamePathValid] = useState(false)
   const [libraryPathValid, setLibraryPathValid] = useState(false)
   const [autoDetectAttempted, setAutoDetectAttempted] = useState(false)
 
+  const resolveDownloadPath = (nextLibraryPath: string): string => {
+    const normalizedLibraryPath = nextLibraryPath.trim()
+    if (!normalizedLibraryPath) {
+      return defaultPaths?.downloadPath ?? settings?.downloadPath ?? ''
+    }
+
+    const libraryParent = getParentDirectory(normalizedLibraryPath)
+    if (!libraryParent) {
+      return defaultPaths?.downloadPath ?? settings?.downloadPath ?? ''
+    }
+
+    return `${libraryParent}\\Downloads`
+  }
+
+  useEffect(() => {
+    if (!defaultPaths) {
+      void loadDefaultPaths().catch(() => undefined)
+    }
+  }, [defaultPaths, loadDefaultPaths])
+
   useEffect(() => {
     setGamePath(settings?.gamePath ?? '')
-    setLibraryPath(settings?.libraryPath ?? '')
-  }, [settings?.gamePath, settings?.libraryPath])
+    setLibraryPath(settings?.libraryPath ?? defaultPaths?.libraryPath ?? '')
+    setDownloadPath(settings?.downloadPath ?? resolveDownloadPath(settings?.libraryPath ?? defaultPaths?.libraryPath ?? ''))
+  }, [defaultPaths?.libraryPath, settings?.downloadPath, settings?.gamePath, settings?.libraryPath])
 
   useEffect(() => {
-    validateGamePath(gamePath).then(setGamePathValid).catch(() => setGamePathValid(false))
-  }, [gamePath, validateGamePath])
+    checkGamePath(gamePath).then(setGamePathValid).catch(() => setGamePathValid(false))
+  }, [checkGamePath, gamePath])
 
   useEffect(() => {
-    validateLibraryPath(libraryPath).then(setLibraryPathValid).catch(() => setLibraryPathValid(false))
-  }, [libraryPath, validateLibraryPath])
+    checkLibraryPath(libraryPath).then(setLibraryPathValid).catch(() => setLibraryPathValid(false))
+  }, [checkLibraryPath, libraryPath])
 
   useEffect(() => {
     if (autoDetectAttempted || gamePath.trim()) return
     setAutoDetectAttempted(true)
-    void autoDetect(true)
-  }, [gamePath, autoDetectAttempted])
+    void applyGameDefault(true)
+  }, [autoDetectAttempted, gamePath])
 
   const browseGame = async () => {
     const result = await IpcService.invoke<{ canceled: boolean; filePaths: string[] }>(
       IPC.OPEN_FOLDER_DIALOG,
       { title: 'Select Cyberpunk 2077 folder' }
     )
-    if (!result.canceled && result.filePaths.length) setGamePath(result.filePaths[0])
+    if (!result.canceled && result.filePaths.length) {
+      setGamePath(result.filePaths[0])
+    }
   }
 
   const browseLibrary = async () => {
@@ -55,26 +92,61 @@ export const WelcomeScreen: React.FC = () => {
       IPC.OPEN_FOLDER_DIALOG,
       { title: 'Select Mod Library folder' }
     )
-    if (!result.canceled && result.filePaths.length) setLibraryPath(result.filePaths[0])
+    if (!result.canceled && result.filePaths.length) {
+      setLibraryPath(result.filePaths[0])
+    }
   }
 
-  const autoDetect = async (silent = false) => {
+  const browseDownloads = async () => {
+    const result = await IpcService.invoke<{ canceled: boolean; filePaths: string[] }>(
+      IPC.OPEN_FOLDER_DIALOG,
+      { title: 'Select Downloads folder' }
+    )
+    if (!result.canceled && result.filePaths.length) {
+      setDownloadPath(result.filePaths[0])
+    }
+  }
+
+  const applyGameDefault = async (silent = false) => {
     setDetectingGame(true)
     const result = await detectGamePath()
     setDetectingGame(false)
 
     if (!result.ok || !result.data) {
-      if (!silent) addToast(result.error ?? 'Could not auto-detect Cyberpunk 2077', 'warning', 2600)
+      if (!silent) {
+        addToast(result.error ?? 'Could not auto-detect Cyberpunk 2077', 'warning', 2600)
+      }
       return
     }
 
     setGamePath(result.data)
-    if (!silent) addToast('Game path auto-detected', 'success', 1800)
+    if (!silent) {
+      addToast('Game path default loaded', 'success', 1800)
+    }
+  }
+
+  const applyLibraryDefault = () => {
+    if (!defaultPaths) return
+    setLibraryPath(defaultPaths.libraryPath)
+    addToast('Default managed library loaded', 'info', 1800)
+  }
+
+  const applyDownloadsDefault = () => {
+    const nextDownloadPath = resolveDownloadPath(libraryPath || defaultPaths?.libraryPath || '')
+    setDownloadPath(nextDownloadPath)
+    addToast('Default downloads path loaded', 'info', 1800)
   }
 
   const applyPaths = async () => {
+    if (!gamePathValid || !libraryPathValid) {
+      addToast('Select a valid game folder and mod library before applying paths', 'warning', 2400)
+      return
+    }
+
     const libraryChanged = libraryPath !== (settings?.libraryPath ?? '')
     const gameChanged = gamePath !== (settings?.gamePath ?? '')
+    const resolvedDownloadPath = downloadPath.trim() || resolveDownloadPath(libraryPath)
+    const downloadChanged = resolvedDownloadPath !== (settings?.downloadPath ?? '')
 
     if ((libraryChanged || gameChanged) && settings?.gamePath?.trim() && settings?.libraryPath?.trim()) {
       const purgeResult = await purgeMods()
@@ -86,7 +158,7 @@ export const WelcomeScreen: React.FC = () => {
       }
     }
 
-    await updateSettings({ gamePath, libraryPath })
+    await updateSettings({ gamePath, libraryPath, downloadPath: resolvedDownloadPath })
     const scannedMods = await scanMods()
 
     if (gamePathValid && libraryPathValid) {
@@ -95,114 +167,128 @@ export const WelcomeScreen: React.FC = () => {
       if (failedRestoreCount > 0) {
         addToast(`Loaded library, but ${failedRestoreCount} active mod(s) could not be restored`, 'warning', 3200)
       }
-      addToast('Required paths saved', 'success', 1800)
+      addToast(downloadChanged ? 'Paths and defaults saved' : 'Required paths saved', 'success', 1800)
       setActiveView('library')
     }
   }
 
   const missingGame = !gamePath.trim() || !gamePathValid
-  const missingLibrary = !libraryPath.trim() || !libraryPathValid
+  const activeGameState = gamePath.trim() ? (gamePathValid ? 'Valid Path' : 'Target Invalid') : 'Target Required'
+  const resolvedDefaultDownloadPath = resolveDownloadPath(libraryPath || defaultPaths?.libraryPath || '')
+  const effectiveDownloadPath = downloadPath.trim() || resolvedDefaultDownloadPath
+
+  const browseBtn = 'px-4 py-2 bg-[#0a0a0a] border-[0.5px] border-[#fcee09]/30 text-[#fcee09] rounded-sm text-[10px] brand-font font-bold uppercase tracking-widest hover:bg-[#fcee09] hover:text-[#050505] transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#0a0a0a] disabled:hover:text-[#fcee09]'
+  const accentBtn = 'px-4 py-2 bg-[#0a0a0a] border-[0.5px] border-[#1a1a1a] text-[#9a9a9a] rounded-sm text-[10px] brand-font font-semibold uppercase tracking-widest hover:text-white hover:border-[#7a7a7a] transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#0a0a0a] disabled:hover:text-[#9a9a9a] disabled:hover:border-[#1a1a1a]'
+  const statusBadgeClass = 'relative top-[-1px] inline-flex h-5 items-center rounded-sm border-[0.5px] px-2.5 text-[9px] font-mono uppercase leading-none tracking-[0.14em]'
+  const metaBadgeClass = 'relative top-[-1px] inline-flex h-5 items-center rounded-sm border-[0.5px] px-2 text-[9px] font-mono uppercase leading-none tracking-[0.14em]'
+  const sectionDotClass = 'relative top-[-1px] h-1.5 w-1.5 flex-shrink-0 bg-[#fcee09]'
 
   return (
-    <div className="h-full overflow-y-auto bg-[#050505]">
-      <div className="mx-auto flex min-h-full max-w-5xl items-center px-8 py-14">
-        <div className="w-full overflow-hidden border-[0.5px] border-[#4a3f08] bg-[#050505] shadow-[0_12px_32px_rgba(0,0,0,0.28)]">
-          <div className="border-b-[0.5px] border-[#4a3f08] bg-[#090804] px-8 py-6">
-            <div className="mb-3 flex items-center gap-2 text-[#fcee09]">
-              <span className="material-symbols-outlined text-[16px]">warning</span>
-              <span className="text-[10px] uppercase tracking-[0.22em] brand-font font-bold">Path Required</span>
-            </div>
-            <h1 className="screen-title-font text-[1.22rem] font-semibold uppercase tracking-[0.2em] text-white">
-              Configure Required Paths
-            </h1>
-            <p className="mt-3 max-w-3xl text-[12px] font-mono uppercase tracking-[0.12em] text-[#8a8a8a]">
-              Hyperion needs the Cyberpunk 2077 game folder and a mod library before mod installation can be enabled.
+    <div className="relative h-full overflow-auto animate-settings-in flex items-center justify-center bg-[#050505] p-6">
+      <div
+        className="absolute inset-x-0 top-0 h-12"
+        style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
+      />
+      <div className="w-full max-w-[680px]">
+
+        {/* Page header */}
+        <div className="flex items-end justify-between mb-5">
+          <div>
+            <h1 className="brand-font text-xl font-bold tracking-[0.18em] uppercase text-white">Workspace Setup</h1>
+            <p className="mt-2 text-[11px] text-[#8a8a8a] font-mono tracking-[0.15em] uppercase">
+              Configure required paths to initialize Hyperion
             </p>
           </div>
+          <div className="relative shrink-0 overflow-hidden rounded-sm border-[0.5px] border-[#6a5b10] bg-[linear-gradient(180deg,#171303,#100d02)] px-3 py-2 text-[9px] font-mono uppercase tracking-[0.16em] text-[#f1df88] shadow-[inset_0_1px_0_rgba(252,238,9,0.08)]">
+            <span className="absolute inset-0 animate-[firstrun-glow_2.4s_ease-in-out_infinite] bg-[linear-gradient(90deg,transparent,rgba(252,238,9,0.08),transparent)]" />
+            <span className="relative">First Run</span>
+          </div>
+        </div>
 
-          <div className="grid gap-6 px-8 py-8 lg:grid-cols-[1.15fr_0.85fr]">
-            <div className="space-y-6">
-              <div className="border-[0.5px] border-[#1a1a1a] bg-[#070707] p-5">
-                <div className="mb-4 flex items-center justify-between gap-4">
-                  <div>
-                    <div className="text-[9px] uppercase tracking-[0.2em] text-[#8a8a8a] brand-font font-bold">Game Path</div>
-                    <div className="mt-2 text-sm text-[#e5e2e1]">{missingGame ? 'Not configured' : gamePath}</div>
-                  </div>
-                  <span className={`text-[10px] font-mono uppercase tracking-[0.18em] ${missingGame ? 'text-[#fcee09]' : 'text-[#6fe3b1]'}`}>
-                    {missingGame ? 'Invalid' : 'Valid'}
-                  </span>
-                </div>
+        {/* Paths card */}
+        <div className="border-[0.5px] border-[#1a1a1a] bg-[#070707] shadow-[0_6px_18px_rgba(0,0,0,0.24)]">
 
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={browseGame}
-                    className="px-4 py-2 bg-[#0a0a0a] border-[0.5px] border-[#1a1a1a] text-[#9a9a9a] rounded-sm text-[10px] brand-font font-semibold uppercase tracking-widest hover:text-white hover:border-[#7a7a7a] transition-colors"
-                  >
-                    Browse Game Path
-                  </button>
-                  <button
-                    onClick={() => void autoDetect()}
-                    disabled={detectingGame}
-                    className="px-4 py-2 bg-[#0a0a0a] border-[0.5px] border-[#1a1a1a] text-[#9a9a9a] rounded-sm text-[10px] brand-font font-semibold uppercase tracking-widest hover:text-[#fcee09] hover:border-[#fcee09]/35 transition-colors disabled:opacity-60"
-                  >
-                    {detectingGame ? 'Detecting' : 'Auto Detect'}
-                  </button>
-                </div>
-              </div>
-
-              <div className="border-[0.5px] border-[#1a1a1a] bg-[#070707] p-5">
-                <div className="mb-4 flex items-center justify-between gap-4">
-                  <div>
-                    <div className="text-[9px] uppercase tracking-[0.2em] text-[#8a8a8a] brand-font font-bold">Mod Library</div>
-                    <div className="mt-2 text-sm text-[#e5e2e1]">{missingLibrary ? 'Not configured' : libraryPath}</div>
-                  </div>
-                  <span className={`text-[10px] font-mono uppercase tracking-[0.18em] ${missingLibrary ? 'text-[#fcee09]' : 'text-[#6fe3b1]'}`}>
-                    {missingLibrary ? 'Invalid' : 'Valid'}
-                  </span>
-                </div>
-
-                <button
-                  onClick={browseLibrary}
-                  className="px-4 py-2 bg-[#0a0a0a] border-[0.5px] border-[#1a1a1a] text-[#9a9a9a] rounded-sm text-[10px] brand-font font-semibold uppercase tracking-widest hover:text-white hover:border-[#7a7a7a] transition-colors"
-                >
-                  Browse Mod Library
-                </button>
-              </div>
+          {/* Game Path */}
+          <div className="px-5 py-5 border-b-[0.5px] border-[#1a1a1a]">
+            <div className="flex items-center gap-2 mb-2 min-h-[20px]">
+              <div className={sectionDotClass} />
+              <span className="text-[9px] uppercase tracking-widest text-white brand-font font-bold">Game Path</span>
+              <span className={`${metaBadgeClass} border-[#1e3a5f] bg-[#071524] text-[#60a5fa]`}>Required</span>
+              <span className={`ml-auto ${statusBadgeClass} ${
+                missingGame ? 'border-[#7e6d12] bg-[#0d0b00] text-[#fcee09]' : 'border-[#1d3d2e] bg-[#091410] text-[#34d399]'
+              }`}>
+                {activeGameState}
+              </span>
             </div>
+            <p className="text-[12px] text-[#9a9a9a] font-mono mb-3 leading-relaxed">
+              Cyberpunk 2077 installation root — used for executable validation and mod deployment.
+            </p>
+            <div className={`allow-text-selection border-[0.5px] bg-[#0a0a0a] px-4 py-3 font-mono text-sm text-[#e5e2e1] mb-3 min-w-0 ${
+              missingGame ? 'border-[#6a5a10]' : 'border-[#1a1a1a]'
+            }`}>
+              <div className="break-all">{gamePath || <span className="text-[#6b6b6b]">Select Cyberpunk 2077 directory...</span>}</div>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => void applyGameDefault()} disabled={detectingGame} className={accentBtn}>
+                {detectingGame ? 'Detecting...' : 'Auto Detect'}
+              </button>
+              <button onClick={browseGame} className={`${browseBtn} ml-auto`}>Browse</button>
+            </div>
+          </div>
 
-            <div className="border-[0.5px] border-[#1a1a1a] bg-[#070707] p-5">
-              <div className="mb-4 text-[9px] uppercase tracking-[0.2em] text-[#8a8a8a] brand-font font-bold">Status</div>
-              <div className="space-y-3">
-                <div className={`border-[0.5px] px-4 py-3 text-[11px] font-mono uppercase tracking-[0.14em] ${missingGame ? 'border-[#4a3f08] bg-[#151202] text-[#fcee09]' : 'border-[#163023] bg-[#07110b] text-[#6fe3b1]'}`}>
-                  {missingGame ? 'Game path invalid or missing' : 'Game path valid'}
-                </div>
-                <div className={`border-[0.5px] px-4 py-3 text-[11px] font-mono uppercase tracking-[0.14em] ${missingLibrary ? 'border-[#4a3f08] bg-[#151202] text-[#fcee09]' : 'border-[#163023] bg-[#07110b] text-[#6fe3b1]'}`}>
-                  {missingLibrary ? 'Mod library invalid or missing' : 'Mod library valid'}
-                </div>
-              </div>
+          {/* Mod Library */}
+          <div className="px-5 py-5 border-b-[0.5px] border-[#1a1a1a]">
+            <div className="flex items-center gap-2 mb-2 min-h-[20px]">
+              <div className={sectionDotClass} />
+              <span className="text-[9px] uppercase tracking-widest text-white brand-font font-bold">Mod Library</span>
+              <span className={`${metaBadgeClass} border-[#1e3a5f] bg-[#071524] text-[#60a5fa]`}>Required</span>
+            </div>
+            <p className="text-[12px] text-[#9a9a9a] font-mono mb-3 leading-relaxed">
+              Managed archive repository for mod metadata, staging, and deployment recovery.
+            </p>
+            <div className="allow-text-selection border-[0.5px] border-[#1a1a1a] bg-[#0a0a0a] px-4 py-3 font-mono text-sm text-[#e5e2e1] mb-3 min-w-0">
+              <div className="break-all">{libraryPath || <span className="text-[#6b6b6b]">Select mod library directory...</span>}</div>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={applyLibraryDefault} disabled={!defaultPaths} className={accentBtn}>Use Default</button>
+              <button onClick={browseLibrary} className={`${browseBtn} ml-auto`}>Browse</button>
+            </div>
+          </div>
 
-              <p className="mt-5 text-[11px] text-[#8a8a8a] font-mono uppercase tracking-[0.12em] leading-6">
-                Mod installation stays locked until both required paths are configured.
-              </p>
-
-              <div className="mt-6 flex flex-wrap gap-3">
-                <button
-                  onClick={applyPaths}
-                  disabled={!gamePathValid || !libraryPathValid}
-                  className="px-5 py-2 bg-[#fcee09] text-[#050505] rounded-sm text-[10px] brand-font font-bold uppercase tracking-widest hover:bg-white transition-colors disabled:opacity-50 disabled:hover:bg-[#fcee09]"
-                >
-                  Apply Paths
-                </button>
-                <button
-                  onClick={() => setActiveView('settings')}
-                  className="px-4 py-2 bg-[#0a0a0a] border-[0.5px] border-[#1a1a1a] text-[#9a9a9a] rounded-sm text-[10px] brand-font font-semibold uppercase tracking-widest hover:text-white hover:border-[#7a7a7a] transition-colors"
-                >
-                  Open Configuration
-                </button>
-              </div>
+          {/* Downloads */}
+          <div className="px-5 py-5">
+            <div className="flex items-center gap-2 mb-2 min-h-[20px]">
+              <div className="relative top-[-1px] h-1.5 w-1.5 flex-shrink-0 bg-[rgba(252,238,9,0.35)]" />
+              <span className="text-[9px] uppercase tracking-widest text-[#d0d0d0] brand-font font-bold">Downloads Intake</span>
+              <span className={`${metaBadgeClass} border-[#343434] bg-[#121212] text-[#878787]`}>Optional</span>
+            </div>
+            <p className="text-[12px] text-[#9a9a9a] font-mono mb-3 leading-relaxed">
+              Source folder for incoming archives. Defaults to a sibling folder beside the library.
+            </p>
+            <div className="allow-text-selection border-[0.5px] border-[#1a1a1a] bg-[#0a0a0a] px-4 py-3 font-mono text-sm text-[#e5e2e1] mb-3 min-w-0">
+              <div className="break-all">{effectiveDownloadPath || <span className="text-[#6b6b6b]">Waiting for path definition...</span>}</div>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={applyDownloadsDefault} className={accentBtn}>Use Default</button>
+              <button onClick={browseDownloads} className={`${browseBtn} ml-auto`}>Browse</button>
             </div>
           </div>
         </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between mt-5 pt-5 border-t-[0.5px] border-[#1a1a1a] gap-6">
+          <p className="text-[12px] text-[#9a9a9a] font-mono leading-relaxed">
+            Hyperion initializes only after both required paths validate.
+          </p>
+          <button
+            onClick={applyPaths}
+            disabled={!gamePathValid || !libraryPathValid}
+            className="shrink-0 px-6 py-3 bg-[#fcee09] text-[#050505] rounded-sm text-[10px] brand-font font-bold uppercase tracking-widest hover:bg-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-[#1c1b07] disabled:text-[#6b6830] disabled:hover:bg-[#1c1b07]"
+          >
+            Initialize Workspace
+          </button>
+        </div>
+
       </div>
     </div>
   )

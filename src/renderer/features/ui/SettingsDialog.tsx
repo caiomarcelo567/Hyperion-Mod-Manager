@@ -12,9 +12,11 @@ export const SettingsPage: React.FC = () => {
     purgeMods,
     selectMod,
     addToast,
+    defaultPaths,
+    loadDefaultPaths,
     detectGamePath,
-    validateGamePath,
-    validateLibraryPath,
+    checkGamePath,
+    checkLibraryPath,
   } = useAppStore()
 
   const [gamePath, setGamePath]       = useState('')
@@ -24,6 +26,13 @@ export const SettingsPage: React.FC = () => {
   const [gamePathValid, setGamePathValid] = useState(false)
   const [libraryPathValid, setLibraryPathValid] = useState(false)
   const [appVersion, setAppVersion] = useState('—')
+  const [activeTab, setActiveTab] = useState<'paths' | 'workspace'>('paths')
+
+  useEffect(() => {
+    if (!defaultPaths) {
+      void loadDefaultPaths().catch(() => undefined)
+    }
+  }, [defaultPaths, loadDefaultPaths])
 
   useEffect(() => {
     if (settings) {
@@ -34,12 +43,12 @@ export const SettingsPage: React.FC = () => {
   }, [settings])
 
   useEffect(() => {
-    validateGamePath(gamePath).then(setGamePathValid).catch(() => setGamePathValid(false))
-  }, [gamePath, validateGamePath])
+    checkGamePath(gamePath).then(setGamePathValid).catch(() => setGamePathValid(false))
+  }, [checkGamePath, gamePath])
 
   useEffect(() => {
-    validateLibraryPath(libraryPath).then(setLibraryPathValid).catch(() => setLibraryPathValid(false))
-  }, [libraryPath, validateLibraryPath])
+    checkLibraryPath(libraryPath).then(setLibraryPathValid).catch(() => setLibraryPathValid(false))
+  }, [checkLibraryPath, libraryPath])
 
   useEffect(() => {
     IpcService.invoke<string>(IPC.GET_APP_VERSION)
@@ -56,6 +65,8 @@ export const SettingsPage: React.FC = () => {
       downloadPath !== settings.downloadPath
 
     if (!hasChanges) return
+
+    if (!gamePathValid || !libraryPathValid) return
 
     const timeoutId = window.setTimeout(async () => {
       try {
@@ -95,6 +106,13 @@ export const SettingsPage: React.FC = () => {
     return () => window.clearTimeout(timeoutId)
   }, [gamePath, libraryPath, downloadPath, settings, updateSettings, scanMods, restoreEnabledMods, purgeMods, selectMod, addToast, gamePathValid, libraryPathValid])
 
+  const applyDefaultManagedPaths = () => {
+    if (!defaultPaths) return
+    setLibraryPath(defaultPaths.libraryPath)
+    setDownloadPath(defaultPaths.downloadPath)
+    addToast('Default library and downloads paths loaded', 'info', 1800)
+  }
+
   const browseGame = async () => {
     const r = await IpcService.invoke<{ canceled: boolean; filePaths: string[] }>(
       IPC.OPEN_FOLDER_DIALOG,
@@ -131,126 +149,187 @@ export const SettingsPage: React.FC = () => {
     if (!r.canceled && r.filePaths.length) setDownloadPath(r.filePaths[0])
   }
 
+  const saveBlocked = !gamePathValid || !libraryPathValid
+  const browseBtn = 'px-4 py-2 bg-[#0a0a0a] border-[0.5px] border-[#fcee09]/30 text-[#fcee09] rounded-sm text-[10px] brand-font font-bold uppercase tracking-widest hover:bg-[#fcee09] hover:text-[#050505] transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#0a0a0a] disabled:hover:text-[#fcee09]'
+  const accentBtn = 'px-4 py-2 bg-[#0a0a0a] border-[0.5px] border-[#1a1a1a] text-[#9a9a9a] rounded-sm text-[10px] brand-font font-semibold uppercase tracking-widest hover:text-white hover:border-[#7a7a7a] transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#0a0a0a] disabled:hover:text-[#9a9a9a] disabled:hover:border-[#1a1a1a]'
+  const statusBadgeClass = 'relative top-[-1px] inline-flex h-5 items-center rounded-sm border-[0.5px] px-2.5 text-[9px] font-mono uppercase leading-none tracking-[0.14em]'
+  const metaBadgeClass = 'relative top-[-1px] inline-flex h-5 items-center rounded-sm border-[0.5px] px-2 text-[9px] font-mono uppercase leading-none tracking-[0.14em]'
+  const sectionDotClass = 'relative top-[-1px] h-1.5 w-1.5 flex-shrink-0 bg-[#fcee09]'
+  const tabButtonClass = (tab: 'paths' | 'workspace') => `group relative flex w-full items-center gap-3 overflow-hidden rounded-sm border-[0.5px] px-3 py-3 text-left transition-all duration-200 ${
+    activeTab === tab
+      ? 'border-[#6a5b10] bg-transparent text-[#f1df88]'
+      : 'border-[#1a1a1a] bg-transparent text-[#a3a3a3] hover:border-[#2a2a2a] hover:text-[#d0d0d0]'
+  }`
+
   return (
-    <div className="h-full overflow-y-auto animate-settings-in">
-      <div className="max-w-3xl mx-auto px-12 py-14">
+    <div className="h-full overflow-y-auto hyperion-scrollbar pb-16 animate-settings-in">
+      <div className="max-w-5xl mx-auto px-10 py-12">
 
         {/* Page header */}
         <div className="mb-10">
           <h1 className="brand-font text-[1.5rem] font-black tracking-[0.08em] text-white uppercase leading-none mb-2">
             Configuration
           </h1>
-          <p className="text-[10px] tracking-[0.2em] text-[#7a7a7a] uppercase font-mono">
-            System Parameters &amp; Deployment Rules
+          <p className="text-[12px] tracking-[0.14em] text-[#a6a6a6] uppercase font-mono">
+            Paths, workspace modules &amp; library controls
           </p>
         </div>
 
         <div className="border-t-[0.5px] border-[#1a1a1a] mb-10" />
 
-        {/* Core Directories */}
-        <section className="mb-10">
-          <h2 className="text-[10px] tracking-[0.2em] text-[#8a8a8a] uppercase font-mono font-bold mb-8">
-            Core Directories
-          </h2>
+        <div className="grid gap-0 border-[0.5px] border-[#1a1a1a] bg-[#070707] shadow-[0_6px_18px_rgba(0,0,0,0.24)] lg:grid-cols-[168px_minmax(0,1fr)]">
+          <aside className="border-b-[0.5px] border-[#1a1a1a] bg-[linear-gradient(180deg,rgba(12,12,12,0.98),rgba(8,8,8,0.98))] p-4 lg:border-b-0 lg:border-r-[0.5px]">
+            <div className="mb-4 text-[11px] uppercase tracking-[0.18em] text-[#b6b6b6] font-mono">Sections</div>
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => setActiveTab('paths')}
+                className={tabButtonClass('paths')}
+              >
+                <span className={`absolute inset-y-0 left-0 w-[2px] ${activeTab === 'paths' ? 'bg-[#fcee09]' : 'bg-transparent group-hover:bg-[#2f2f2f]'}`} />
+                <span className={`h-1.5 w-1.5 flex-shrink-0 ${activeTab === 'paths' ? 'bg-[#fcee09]' : 'bg-[#3a3a3a]'}`} />
+                <span className="text-[10px] uppercase tracking-[0.18em] font-mono">Paths</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('workspace')}
+                className={tabButtonClass('workspace')}
+              >
+                <span className={`absolute inset-y-0 left-0 w-[2px] ${activeTab === 'workspace' ? 'bg-[#fcee09]' : 'bg-transparent group-hover:bg-[#2f2f2f]'}`} />
+                <span className={`h-1.5 w-1.5 flex-shrink-0 ${activeTab === 'workspace' ? 'bg-[#fcee09]' : 'bg-[#3a3a3a]'}`} />
+                <span className="text-[10px] uppercase tracking-[0.18em] font-mono">Workspace</span>
+              </button>
+            </div>
+          </aside>
 
-          {/* Game Path */}
-          <div className="mb-8">
-            <div className="flex justify-between items-baseline mb-2">
-              <label className="text-[10px] tracking-[0.15em] text-[#9a9a9a] uppercase font-mono">
-                Game Path
-              </label>
-              <span className={`text-[9px] tracking-[0.15em] uppercase font-mono ${gamePathValid ? 'text-[#6fe3b1]' : 'text-[#fcee09]'}`}>
-                {gamePathValid ? 'Valid' : 'Required'}
-              </span>
+          <section className="min-w-0 p-0">
+          {activeTab === 'paths' && (
+          <div>
+            <div className="border-b-[0.5px] border-[#1a1a1a] px-5 py-5">
+              <div className="text-[10px] tracking-[0.2em] text-[#8a8a8a] uppercase font-mono font-bold mb-2">
+                Core Directories
+              </div>
+              <p className="text-[12px] text-[#7f7f7f] font-mono leading-relaxed">
+                Required paths define launch, deployment, archive storage, and download intake behavior.
+              </p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <input
-                type="text"
-                value={gamePath}
-                onChange={(e) => setGamePath(e.target.value)}
-                placeholder="SteamLibrary\steamapps\common\Cyberpunk 2077"
-                className="min-w-[280px] flex-1 bg-[#0a0a0a] border-[0.5px] border-[#1a1a1a] px-4 py-3 text-sm text-[#e5e2e1] placeholder-[#2a2a2a] font-mono focus:outline-none focus:border-[#fcee09]/50 transition-all"
-              />
-              <button
-                onClick={browseGame}
-                className="px-6 py-3 bg-[#0f0f0f] border-[0.5px] border-[#1a1a1a] text-[10px] tracking-widest font-bold uppercase text-[#b0b0b0] hover:border-[#fcee09]/60 hover:text-[#fcee09] transition-all whitespace-nowrap"
-              >
-                Browse
-              </button>
-              <button
-                onClick={autoDetectGame}
-                disabled={detectingGame}
-                className="px-5 py-3 bg-[#090909] border-[0.5px] border-[#1a1a1a] text-[10px] tracking-widest font-bold uppercase text-[#8a8a8a] hover:border-[#fcee09]/45 hover:text-[#fcee09] transition-all whitespace-nowrap disabled:opacity-60"
-              >
-                {detectingGame ? 'Detecting' : 'Auto Detect'}
-              </button>
+
+            <div>
+            <div className="px-5 py-5 border-b-[0.5px] border-[#1a1a1a]">
+              <div className="flex items-center gap-2 mb-2 min-h-[20px]">
+                <div className={sectionDotClass} />
+                <span className="text-[9px] uppercase tracking-widest text-white brand-font font-bold">Game Path</span>
+                <span className={`${metaBadgeClass} border-[#1e3a5f] bg-[#071524] text-[#60a5fa]`}>Required</span>
+                <span className={`ml-auto ${statusBadgeClass} ${gamePathValid ? 'border-[#1d3d2e] bg-[#091410] text-[#34d399]' : 'border-[#7e6d12] bg-[#0d0b00] text-[#fcee09]'}`}>
+                  {gamePathValid ? 'Valid Path' : 'Target Required'}
+                </span>
+              </div>
+              <p className="text-[12px] text-[#9a9a9a] font-mono mb-3 leading-relaxed">
+                Root Cyberpunk 2077 folder used for launch validation and deployment targeting.
+              </p>
+              <div className={`allow-text-selection border-[0.5px] bg-[#0a0a0a] px-4 py-3 font-mono text-sm text-[#e5e2e1] mb-3 min-w-0 ${gamePathValid ? 'border-[#1a1a1a]' : 'border-[#6a5a10]'}`}>
+                <div className="break-all">{gamePath || <span className="text-[#6b6b6b]">SteamLibrary\steamapps\common\Cyberpunk 2077</span>}</div>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => void autoDetectGame()} disabled={detectingGame} className={accentBtn}>
+                  {detectingGame ? 'Detecting...' : 'Auto Detect'}
+                </button>
+                <button onClick={browseGame} className={`${browseBtn} ml-auto`}>
+                  Browse
+                </button>
+              </div>
             </div>
-            <p className="text-[11px] text-[#7a7a7a] mt-2 font-mono">
-              {gamePathValid
-                ? 'Root Cyberpunk 2077 folder detected and ready to launch.'
-                : 'Root Cyberpunk 2077 folder required. A valid path must contain bin\\x64\\Cyberpunk2077.exe.'}
-            </p>
+
+            <div className="px-5 py-5 border-b-[0.5px] border-[#1a1a1a]">
+              <div className="flex items-center gap-2 mb-2 min-h-[20px]">
+                <div className={sectionDotClass} />
+                <span className="text-[9px] uppercase tracking-widest text-white brand-font font-bold">Mod Library</span>
+                <span className={`${metaBadgeClass} border-[#1e3a5f] bg-[#071524] text-[#60a5fa]`}>Required</span>
+                <span className={`ml-auto ${statusBadgeClass} ${libraryPathValid ? 'border-[#1d3d2e] bg-[#091410] text-[#34d399]' : 'border-[#7e6d12] bg-[#0d0b00] text-[#fcee09]'}`}>
+                  {libraryPathValid ? 'Valid Path' : 'Target Required'}
+                </span>
+              </div>
+              <p className="text-[12px] text-[#9a9a9a] font-mono mb-3 leading-relaxed">
+                Managed archive repository for metadata, reinstalls, autosave scanning, and recovery.
+              </p>
+              <div className="allow-text-selection border-[0.5px] border-[#1a1a1a] bg-[#0a0a0a] px-4 py-3 font-mono text-sm text-[#e5e2e1] mb-3 min-w-0">
+                <div className="break-all">{libraryPath || <span className="text-[#6b6b6b]">F:\Mods\Cyberpunk 2077</span>}</div>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={applyDefaultManagedPaths} disabled={!defaultPaths} className={accentBtn}>
+                  Use Default
+                </button>
+                <button onClick={browseLibrary} className={`${browseBtn} ml-auto`}>
+                  Browse
+                </button>
+              </div>
+            </div>
+
+            <div className="px-5 py-5">
+              <div className="flex items-center gap-2 mb-2 min-h-[20px]">
+                <div className="relative top-[-1px] h-1.5 w-1.5 flex-shrink-0 bg-[rgba(252,238,9,0.35)]" />
+                <span className="text-[9px] uppercase tracking-widest text-[#d0d0d0] brand-font font-bold">Downloads Intake</span>
+                <span className={`${metaBadgeClass} border-[#343434] bg-[#121212] text-[#878787]`}>Optional</span>
+              </div>
+              <p className="text-[12px] text-[#9a9a9a] font-mono mb-3 leading-relaxed">
+                Optional archive source folder used for incoming downloads and staged installs.
+              </p>
+              <div className="allow-text-selection border-[0.5px] border-[#1a1a1a] bg-[#0a0a0a] px-4 py-3 font-mono text-sm text-[#e5e2e1] mb-3 min-w-0">
+                <div className="break-all">{downloadPath || <span className="text-[#6b6b6b]">G:\Downloads</span>}</div>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={applyDefaultManagedPaths} disabled={!defaultPaths} className={accentBtn}>
+                  Use Default
+                </button>
+                <button onClick={browseDownloads} className={`${browseBtn} ml-auto`}>
+                  Browse
+                </button>
+              </div>
+            </div>
           </div>
 
-          {/* Mod Library */}
-          <div className="mb-8">
-            <div className="flex justify-between items-baseline mb-2">
-              <label className="text-[10px] tracking-[0.15em] text-[#9a9a9a] uppercase font-mono">
-                Mod Library
-              </label>
-              <span className={`text-[9px] tracking-[0.15em] uppercase font-mono ${libraryPathValid ? 'text-[#6fe3b1]' : 'text-[#fcee09]'}`}>
-                {libraryPathValid ? 'Valid' : 'Required'}
-              </span>
+          {saveBlocked && (
+            <div className="m-5 mt-0 border-[0.5px] border-[#4a3f08] bg-[#151202] px-4 py-3 text-[11px] font-mono uppercase tracking-[0.14em] text-[#fcee09]">
+              Changes stay local until the game path and mod library are valid.
             </div>
-            <div className="flex gap-0">
-              <input
-                type="text"
-                value={libraryPath}
-                onChange={(e) => setLibraryPath(e.target.value)}
-                placeholder="F:\Mods\Cyberpunk 2077"
-                className="flex-1 bg-[#0a0a0a] border-[0.5px] border-[#1a1a1a] border-r-0 px-4 py-3 text-sm text-[#e5e2e1] placeholder-[#2a2a2a] font-mono focus:outline-none focus:border-[#fcee09]/50 transition-all"
-              />
-              <button
-                onClick={browseLibrary}
-                className="px-6 py-3 bg-[#0f0f0f] border-[0.5px] border-[#1a1a1a] text-[10px] tracking-widest font-bold uppercase text-[#b0b0b0] hover:border-[#fcee09]/60 hover:text-[#fcee09] transition-all whitespace-nowrap"
-              >
-                Browse
-              </button>
-            </div>
-            <p className="text-[11px] text-[#7a7a7a] mt-2 font-mono">
-              {libraryPathValid
-                ? 'Mod library path is valid. Hyperion can store and manage mods here.'
-                : 'Use an absolute folder path for the mod library. Game, library, and downloads can live on different drives.'}
-            </p>
+          )}
           </div>
+          )}
+          {activeTab === 'workspace' && (
+          <div>
+            <div className="border-b-[0.5px] border-[#1a1a1a] px-5 py-5">
+              <div className="text-[10px] tracking-[0.2em] text-[#8a8a8a] uppercase font-mono font-bold mb-2">
+                Workspace Controls
+              </div>
+              <p className="text-[12px] text-[#7f7f7f] font-mono leading-relaxed">
+                Secondary tab scaffold connected to the same settings surface for future modules.
+              </p>
+            </div>
 
-          <div className="mb-8">
-            <div className="flex justify-between items-baseline mb-2">
-              <label className="text-[10px] tracking-[0.15em] text-[#9a9a9a] uppercase font-mono">
-                Downloads Path
-              </label>
-              <span className="text-[9px] tracking-[0.15em] text-[#7a7a7a] uppercase font-mono">Optional</span>
+            <div className="px-5 py-5 border-b-[0.5px] border-[#1a1a1a]">
+              <div className="flex items-center gap-2 mb-2 min-h-[20px]">
+                <div className={sectionDotClass} />
+                <span className="text-[9px] uppercase tracking-widest text-white brand-font font-bold">Future Module</span>
+                <span className={`${metaBadgeClass} border-[#343434] bg-[#121212] text-[#878787]`}>Preview</span>
+              </div>
+              <p className="text-[12px] text-[#9a9a9a] font-mono mb-3 leading-relaxed">
+                Use this area for future extension-like settings groups without changing the panel structure.
+              </p>
+              <div className="border-[0.5px] border-[#1a1a1a] bg-[#0a0a0a] px-4 py-4 text-[12px] text-[#8a8a8a] font-mono leading-relaxed">
+                Example future sections: update behavior, indexing rules, workspace automation, or extension-integrated modules.
+              </div>
             </div>
-            <div className="flex gap-0">
-              <input
-                type="text"
-                value={downloadPath}
-                onChange={(e) => setDownloadPath(e.target.value)}
-                placeholder="G:\Downloads"
-                className="flex-1 bg-[#0a0a0a] border-[0.5px] border-[#1a1a1a] border-r-0 px-4 py-3 text-sm text-[#e5e2e1] placeholder-[#2a2a2a] font-mono focus:outline-none focus:border-[#fcee09]/50 transition-all"
-              />
-              <button
-                onClick={browseDownloads}
-                className="px-6 py-3 bg-[#0f0f0f] border-[0.5px] border-[#1a1a1a] text-[10px] tracking-widest font-bold uppercase text-[#b0b0b0] hover:border-[#fcee09]/60 hover:text-[#fcee09] transition-all whitespace-nowrap"
-              >
-                Browse
-              </button>
+
+            <div className="px-5 py-5">
+              <div className="text-[10px] uppercase tracking-[0.18em] text-[#6f6f6f] font-mono mb-3">Status</div>
+              <div className="border-[0.5px] border-[#1a1a1a] bg-[#0a0a0a] px-4 py-3 text-[11px] font-mono uppercase tracking-[0.14em] text-[#8a8a8a]">
+                Workspace tab scaffold ready for expansion.
+              </div>
             </div>
-            <p className="text-[11px] text-[#7a7a7a] mt-2 font-mono">
-              Optional archive source folder. You can keep this on any drive.
-            </p>
           </div>
-        </section>
+          )}
+          </section>
+        </div>
 
         <div className="mt-12 text-right text-[10px] uppercase tracking-[0.16em] text-[#7a7a7a] font-mono">
           Hyperion {appVersion}

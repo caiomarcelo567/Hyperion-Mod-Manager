@@ -1,6 +1,8 @@
 import React from 'react'
 import type { ModMetadata } from '@shared/types'
 import { useAppStore } from '../../store/useAppStore'
+import { shallow } from 'zustand/shallow'
+import { Tooltip } from '../ui/Tooltip'
 
 interface ModRowProps {
   mod: ModMetadata
@@ -74,7 +76,11 @@ export const ModRow: React.FC<ModRowProps> = ({
   onRenameSave,
   onRenameCancel,
 }) => {
-  const { enableMod, disableMod, addToast } = useAppStore()
+  const { enableMod, disableMod, addToast } = useAppStore((state) => ({
+    enableMod: state.enableMod,
+    disableMod: state.disableMod,
+    addToast: state.addToast,
+  }), shallow)
 
   if (mod.kind === 'separator') {
     return (
@@ -93,8 +99,15 @@ export const ModRow: React.FC<ModRowProps> = ({
 
   const color = TYPE_COLOR[mod.type] ?? '#64748B'
   const label = TYPE_LABEL[mod.type] ?? 'UNKNOWN'
-  const baseStripe = index % 2 === 0 ? '#050505' : '#0a0a0a'
-  const disabledStripe = index % 2 === 0 ? '#040404' : '#080808'
+  const rowBackgroundClass = selected
+    ? 'bg-[#0a0a0a]'
+    : mod.enabled
+      ? index % 2 === 0
+        ? 'bg-[#050505] hover:bg-[#141414]'
+        : 'bg-[#0a0a0a] hover:bg-[#161616]'
+      : index % 2 === 0
+        ? 'bg-[#040404] hover:bg-[#101010]'
+        : 'bg-[#080808] hover:bg-[#121212]'
 
   const handleToggle = async (event: React.MouseEvent) => {
     event.stopPropagation()
@@ -108,16 +121,30 @@ export const ModRow: React.FC<ModRowProps> = ({
       onClick={onSelect}
       onDoubleClick={() => onOpenDetails(mod)}
       onContextMenu={(event) => onContextMenu(event, mod)}
-      className={`grid gap-4 pl-6 pr-6 py-3 border-b-[0.5px] border-[#1a1a1a] relative overflow-hidden group transition-colors cursor-default ${
+      className={`library-mod-row grid gap-4 pl-6 pr-6 py-3 border-b-[0.5px] border-[#1a1a1a] relative overflow-hidden group cursor-default transition-[background-color,border-color,box-shadow,opacity] duration-150 ${rowBackgroundClass} ${
         mod.enabled
-          ? 'hover:bg-[#0b0b0b]'
-          : 'opacity-50 hover:opacity-80 hover:bg-[#0a0a0a]'
-      } ${selected ? 'bg-[#111111] ring-1 ring-inset ring-[#fcee09]/50' : ''}`}
+          ? 'hover:border-[#363636] hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.025),inset_0_0_0_1px_rgba(252,238,9,0.09)]'
+          : 'opacity-50 hover:opacity-86 hover:border-[#2c2c2c] hover:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]'
+      } ${selected ? 'ring-1 ring-inset ring-[#fcee09]/50' : ''}`}
       style={{
-        gridTemplateColumns: '56px 36px minmax(200px,1fr) 100px 130px 160px 88px',
-        background: selected ? '#0a0a0a' : mod.enabled ? baseStripe : disabledStripe,
+        gridTemplateColumns: '72px 64px minmax(280px,1fr) 110px 156px 184px 96px',
       }}
     >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+        style={{
+          background: mod.enabled
+            ? 'linear-gradient(90deg, rgba(252,238,9,0.08) 0%, rgba(252,238,9,0.036) 15%, rgba(255,255,255,0.018) 34%, rgba(255,255,255,0) 66%)'
+            : 'linear-gradient(90deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.015) 20%, rgba(255,255,255,0) 62%)',
+        }}
+      />
+
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-y-0 left-0 w-[2px] bg-[#fcee09]/55 opacity-0 transition-opacity duration-150 group-hover:opacity-100"
+      />
+
       <div className="flex items-center pl-2" onClick={handleToggle}>
         <div
           className={`relative h-4 w-8 rounded-full border-[0.5px] transition-all ${
@@ -136,7 +163,7 @@ export const ModRow: React.FC<ModRowProps> = ({
         </div>
       </div>
 
-      <div className="flex items-center text-[#7a7a7a] text-[11px] font-mono group-hover:text-[#9a9a9a] transition-colors">
+      <div className="flex items-center text-[#8a8a8a] text-[12px] font-mono group-hover:text-[#d0d0d0] transition-colors">
         {index}
       </div>
 
@@ -157,7 +184,7 @@ export const ModRow: React.FC<ModRowProps> = ({
         ) : (
           <span
             className={`font-medium tracking-tight truncate transition-colors ${
-              mod.enabled ? 'text-[#e5e2e1] group-hover:text-white' : 'text-[#8a8a8a] line-through group-hover:text-[#9a9a9a]'
+              mod.enabled ? 'text-[#e5e2e1] group-hover:text-[#ffffff]' : 'text-[#8a8a8a] line-through group-hover:text-[#b0b0b0]'
             }`}
           >
             {mod.name}
@@ -165,14 +192,14 @@ export const ModRow: React.FC<ModRowProps> = ({
         )}
       </div>
 
-      <div className={`flex items-center text-[11px] font-mono tracking-tight ${mod.enabled ? 'text-[#9a9a9a]' : 'text-[#8a8a8a]'}`}>
+      <div className={`flex items-center text-[11px] font-mono tracking-tight transition-colors ${mod.enabled ? 'text-[#9a9a9a] group-hover:text-[#c4c4c4]' : 'text-[#8a8a8a] group-hover:text-[#aaaaaa]'}`}>
         {mod.version ?? '—'}
       </div>
 
       <div className="flex items-center">
         <span
-          className={`px-2 py-[2px] border-[0.5px] text-[9px] uppercase tracking-widest rounded-sm ${
-            mod.enabled ? 'bg-[#111] border-[#222]' : 'bg-[#050505] border-[#222]'
+          className={`px-2.5 py-[3px] border-[0.5px] text-[10px] uppercase tracking-widest rounded-sm transition-colors ${
+            mod.enabled ? 'bg-[#111] border-[#222] group-hover:border-[#343434]' : 'bg-[#050505] border-[#222] group-hover:border-[#2e2e2e]'
           }`}
           style={{ color: mod.enabled ? color : '#8a8a8a' }}
         >
@@ -180,56 +207,60 @@ export const ModRow: React.FC<ModRowProps> = ({
         </span>
       </div>
 
-      <div className={`flex items-center text-[10px] font-mono tracking-tight ${mod.enabled ? 'text-[#8a8a8a]' : 'text-[#8a8a8a]'}`}>
+      <div className={`flex items-center text-[11px] font-mono tracking-tight transition-colors ${mod.enabled ? 'text-[#9a9a9a] group-hover:text-[#bdbdbd]' : 'text-[#8a8a8a] group-hover:text-[#9d9d9d]'}`}>
         {mod.enabled ? formatDate(mod.installedAt) : '---'}
       </div>
 
       <div className="flex items-center justify-end gap-2">
         {isRenaming ? (
           <>
-            <button
-              onClick={(event) => {
-                event.stopPropagation()
-                onRenameSave()
-              }}
-              className="flex h-8 w-8 items-center justify-center rounded-sm border-[0.5px] border-[#2b4f2f] bg-[#0a0a0a] text-[#6fe3b1] hover:border-[#6fe3b1]/45 transition-all"
-              title="Save name"
-            >
-              <span className="material-symbols-outlined text-[15px]">check</span>
-            </button>
-            <button
-              onClick={(event) => {
-                event.stopPropagation()
-                onRenameCancel()
-              }}
-              className="flex h-8 w-8 items-center justify-center rounded-sm border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#9a9a9a] hover:border-[#8a8a8a] hover:text-white transition-all"
-              title="Cancel rename"
-            >
-              <span className="material-symbols-outlined text-[15px]">close</span>
-            </button>
+            <Tooltip content="Save name">
+              <button
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onRenameSave()
+                }}
+                className="flex h-8 w-8 items-center justify-center rounded-sm border-[0.5px] border-[#2b4f2f] bg-[#0a0a0a] text-[#6fe3b1] hover:border-[#6fe3b1]/45 transition-all"
+              >
+                <span className="material-symbols-outlined text-[15px]">check</span>
+              </button>
+            </Tooltip>
+            <Tooltip content="Cancel rename">
+              <button
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onRenameCancel()
+                }}
+                className="flex h-8 w-8 items-center justify-center rounded-sm border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#9a9a9a] hover:border-[#8a8a8a] hover:text-white transition-all"
+              >
+                <span className="material-symbols-outlined text-[15px]">close</span>
+              </button>
+            </Tooltip>
           </>
         ) : (
           <>
-            <button
-              onClick={(event) => {
-                event.stopPropagation()
-                onRename(mod)
-              }}
-              className="flex h-8 w-8 items-center justify-center rounded-sm border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#8a8a8a] hover:border-[#fcee09]/45 hover:text-[#fcee09] transition-all"
-              title="Rename mod"
-            >
-              <span className="material-symbols-outlined text-[15px]">edit</span>
-            </button>
-            <button
-              onClick={(event) => {
-                event.stopPropagation()
-                onDelete(mod)
-              }}
-              className="flex h-8 w-8 items-center justify-center rounded-sm border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#8a8a8a] hover:border-[#ff4d4f]/45 hover:text-[#ff4d4f] transition-all"
-              title="Remove mod"
-            >
-              <span className="material-symbols-outlined text-[15px]">delete</span>
-            </button>
+            <Tooltip content="Rename mod">
+              <button
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onRename(mod)
+                }}
+                className="flex h-8 w-8 items-center justify-center rounded-sm border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#8a8a8a] hover:border-[#fcee09]/45 hover:text-[#fcee09] transition-all"
+              >
+                <span className="material-symbols-outlined text-[15px]">edit</span>
+              </button>
+            </Tooltip>
+            <Tooltip content="Remove mod">
+              <button
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onDelete(mod)
+                }}
+                className="flex h-8 w-8 items-center justify-center rounded-sm border-[0.5px] border-[#222] bg-[#0a0a0a] text-[#8a8a8a] hover:border-[#ff4d4f]/45 hover:text-[#ff4d4f] transition-all"
+              >
+                <span className="material-symbols-outlined text-[15px]">delete</span>
+              </button>
+            </Tooltip>
           </>
         )}
       </div>
@@ -243,4 +274,16 @@ export const ModRow: React.FC<ModRowProps> = ({
     </div>
   )
 }
+
+function areModRowPropsEqual(prev: ModRowProps, next: ModRowProps): boolean {
+  return (
+    prev.mod === next.mod &&
+    prev.index === next.index &&
+    prev.selected === next.selected &&
+    prev.isRenaming === next.isRenaming &&
+    prev.renameValue === next.renameValue
+  )
+}
+
+export const MemoModRow = React.memo(ModRow, areModRowPropsEqual)
 

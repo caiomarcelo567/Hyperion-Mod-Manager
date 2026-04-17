@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useAppStore } from '../../store/useAppStore'
 import { IpcService } from '../../services/IpcService'
-import type { LibraryStatusFilter } from '../../store/slices/createLibrarySlice'
+import { Tooltip } from './Tooltip'
 
 export const Header: React.FC = () => {
   const {
@@ -15,37 +15,11 @@ export const Header: React.FC = () => {
     installUpdate,
     filter,
     setFilter,
-    activeView,
-    totalCount,
-    settings,
-    gamePathValid,
-    libraryPathValid,
-    libraryStatusFilter,
-    setLibraryStatusFilter,
-    requestLibraryDeleteAll,
     addToast,
   } = useAppStore()
   const [autoApplyUpdate, setAutoApplyUpdate] = useState(false)
 
   const chromeButtonClass = 'flex h-8 w-8 items-center justify-center rounded-sm text-[#7f7f7f] transition-colors hover:bg-[#111] hover:text-white'
-  const utilityButtonClass = 'flex h-8 w-8 items-center justify-center rounded-sm text-[#7f7f7f] transition-colors hover:bg-[#111] hover:text-white disabled:opacity-60 disabled:hover:bg-transparent disabled:hover:text-[#7f7f7f]'
-  const showLibraryTools = activeView === 'library' && Boolean(settings?.gamePath?.trim() && settings?.libraryPath?.trim() && gamePathValid && libraryPathValid)
-  const libraryModCount = totalCount()
-  const nextLibraryFilter: Record<LibraryStatusFilter, LibraryStatusFilter> = {
-    all: 'enabled',
-    enabled: 'disabled',
-    disabled: 'all',
-  }
-  const libraryFilterIcon: Record<LibraryStatusFilter, string> = {
-    all: 'filter_alt',
-    enabled: 'visibility',
-    disabled: 'visibility_off',
-  }
-  const libraryFilterTitle: Record<LibraryStatusFilter, string> = {
-    all: 'Filter: all mods',
-    enabled: 'Filter: enabled mods',
-    disabled: 'Filter: disabled mods',
-  }
 
   useEffect(() => {
     if (!updateDownloaded || !autoApplyUpdate) return
@@ -134,27 +108,6 @@ export const Header: React.FC = () => {
         className="flex items-center gap-3"
         style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
       >
-        {showLibraryTools && (
-          <>
-            <button
-              className={`${utilityButtonClass} ${libraryStatusFilter !== 'all' ? 'text-[#fcee09] hover:text-[#fcee09]' : ''}`}
-              title={`${libraryFilterTitle[libraryStatusFilter]} - click to switch`}
-              onClick={() => setLibraryStatusFilter(nextLibraryFilter[libraryStatusFilter])}
-            >
-              <span className="material-symbols-outlined text-[18px]">{libraryFilterIcon[libraryStatusFilter]}</span>
-            </button>
-
-            <button
-              className={`${utilityButtonClass} hover:text-[#ff7a7d]`}
-              title="Delete every mod from the current library"
-              onClick={() => requestLibraryDeleteAll()}
-              disabled={libraryModCount === 0}
-            >
-              <span className="material-symbols-outlined text-[18px]">delete_sweep</span>
-            </button>
-          </>
-        )}
-
         {showUpdateTrigger && (
           <button
             onClick={() => void handleUpdateAction()}
@@ -190,38 +143,42 @@ export const Header: React.FC = () => {
           </div>
         )}
 
-        <button
-          className={chromeButtonClass}
-          title="Logs"
-          onClick={() => undefined}
-        >
-          <span className="material-symbols-outlined text-[18px]">terminal</span>
-        </button>
+        <Tooltip content="Logs">
+          <button
+            className={chromeButtonClass}
+            onClick={() => undefined}
+          >
+            <span className="material-symbols-outlined text-[18px]">terminal</span>
+          </button>
+        </Tooltip>
 
         <div className="h-6 w-px bg-[#1a1a1a]" />
 
         <div className="flex items-center gap-0.5">
-          <button
-            className={chromeButtonClass}
-            onClick={() => IpcService.send('window:minimize')}
-            title="Minimize"
-          >
-            <span className="material-symbols-outlined text-[18px]">remove</span>
-          </button>
-          <button
-            className={chromeButtonClass}
-            onClick={() => IpcService.send('window:maximize')}
-            title="Maximize"
-          >
-            <span className="material-symbols-outlined text-[18px]">check_box_outline_blank</span>
-          </button>
-          <button
-            className="flex h-8 w-8 items-center justify-center rounded-sm text-[#7f7f7f] transition-colors hover:bg-[#111] hover:text-[#F87171]"
-            onClick={() => IpcService.send('window:close')}
-            title="Close"
-          >
-            <span className="material-symbols-outlined text-[18px]">close</span>
-          </button>
+          <Tooltip content="Minimize">
+            <button
+              className={chromeButtonClass}
+              onClick={() => IpcService.send('window:minimize')}
+            >
+              <span className="material-symbols-outlined text-[18px]">remove</span>
+            </button>
+          </Tooltip>
+          <Tooltip content="Maximize">
+            <button
+              className={chromeButtonClass}
+              onClick={() => IpcService.send('window:maximize')}
+            >
+              <span className="material-symbols-outlined text-[18px]">check_box_outline_blank</span>
+            </button>
+          </Tooltip>
+          <Tooltip content="Close">
+            <button
+              className="flex h-8 w-8 items-center justify-center rounded-sm text-[#7f7f7f] transition-colors hover:bg-[#111] hover:text-[#F87171]"
+              onClick={() => IpcService.send('window:close')}
+            >
+              <span className="material-symbols-outlined text-[18px]">close</span>
+            </button>
+          </Tooltip>
         </div>
       </div>
     </header>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useAppStore } from './store/useAppStore'
+import { shallow } from 'zustand/shallow'
 import { IpcService } from './services/IpcService'
 import { IPC } from '../shared/types'
 import { Header } from './features/ui/Header'
@@ -48,7 +49,23 @@ export const App: React.FC = () => {
     libraryPathValid,
     validateGamePath,
     validateLibraryPath,
-  } = useAppStore()
+  } = useAppStore((state) => ({
+    loadSettings: state.loadSettings,
+    updateSettings: state.updateSettings,
+    detectGamePath: state.detectGamePath,
+    scanMods: state.scanMods,
+    restoreEnabledMods: state.restoreEnabledMods,
+    checkForUpdates: state.checkForUpdates,
+    setupUpdateListeners: state.setupUpdateListeners,
+    activeView: state.activeView,
+    setStatus: state.setStatus,
+    settings: state.settings,
+    addToast: state.addToast,
+    gamePathValid: state.gamePathValid,
+    libraryPathValid: state.libraryPathValid,
+    validateGamePath: state.validateGamePath,
+    validateLibraryPath: state.validateLibraryPath,
+  }), shallow)
 
   const [booting, setBooting] = useState(true)
 
@@ -115,25 +132,38 @@ export const App: React.FC = () => {
     return () => { cleanup?.() }
   }, [])
 
+  useEffect(() => {
+    const handleRefreshShortcut = (event: KeyboardEvent) => {
+      const key = event.key.toLowerCase()
+      const isRefreshShortcut = key === 'f5' || ((event.ctrlKey || event.metaKey) && key === 'r')
+      if (!isRefreshShortcut) return
+
+      event.preventDefault()
+      window.location.reload()
+    }
+
+    window.addEventListener('keydown', handleRefreshShortcut)
+    return () => window.removeEventListener('keydown', handleRefreshShortcut)
+  }, [])
+
   if (booting) {
     return null
   }
 
   const missingRequiredPaths = !settings?.gamePath?.trim() || !settings?.libraryPath?.trim() || !gamePathValid || !libraryPathValid
+  const showSidebar = !missingRequiredPaths
+  const showHeader = !missingRequiredPaths
 
   return (
     <div className="hyperion-shell h-screen overflow-hidden flex flex-col bg-[#050505] text-[#e5e2e1] antialiased">
-      <div className="hyperion-bg" aria-hidden="true">
-        <div className="hyperion-stars hyperion-stars-back" />
-        <div className="hyperion-stars hyperion-stars-mid" />
-        <div className="hyperion-stars hyperion-stars-front" />
-      </div>
+      <div className="hyperion-bg" aria-hidden="true" />
       <div className="hyperion-content flex h-full flex-col overflow-hidden">
-        <Header />
+        {showHeader && <Header />}
         <div className="flex flex-1 overflow-hidden relative">
-          <Sidebar />
-          <main className="flex-1 ml-20 h-full overflow-y-auto bg-transparent">
-            {activeView === 'settings' ? <SettingsPage /> : missingRequiredPaths ? <WelcomeScreen /> : null}
+          {showSidebar && <Sidebar />}
+          <main className={`flex-1 h-full overflow-hidden bg-transparent transition-[margin] duration-300 ${showSidebar ? 'ml-20' : 'ml-0'}`}>
+            {missingRequiredPaths ? <WelcomeScreen /> : null}
+            {!missingRequiredPaths && activeView === 'settings' ? <SettingsPage /> : null}
             {!missingRequiredPaths && activeView === 'library' && <ModList />}
             {!missingRequiredPaths && activeView === 'downloads' && <DownloadsPane />}
           </main>

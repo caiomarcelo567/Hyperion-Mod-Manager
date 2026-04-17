@@ -35,11 +35,16 @@ Hard no:
 --accent: #FCEE09;
 --accent-hover: #FFF22A;
 --accent-dim: rgba(252,238,9,0.12);
+--accent-cyber-blue: #4FD8FF;
 --status-success: #34D399;
 --status-warning: #FCEE09;
---status-error: #F87171;
+--status-error: #f87272;
 --status-info: #60A5FA;
 ```
+
+Accessibility:
+- All visible text must meet at least WCAG AA contrast against its immediate background
+- Use $4.5:1$ for normal text and $3:1$ for large text
 
 ### Typography
 
@@ -61,7 +66,8 @@ Hard no:
 - Frameless Electron window
 - Custom header with drag region across the top bar
 - Main renderer stays hidden until splash handoff is complete
-- Background uses the current Hyperion starfield treatment from App.tsx and globals.css
+- Background uses a subtle static atmospheric field from App.tsx and globals.css
+- Avoid animated parallax star layers in the main shell; keep the background understated and low-cost to render
 
 ### Header
 
@@ -108,7 +114,9 @@ Alignment rules:
 ### Welcome / first setup
 
 - Shown when required paths are missing or invalid
-- Step-based onboarding for game path and library path
+- Header and sidebar stay hidden until setup is complete, then the full shell appears
+- Onboarding is a dedicated first-run workspace focused on game path, managed library path, and optional downloads intake path
+- Game path carries explicit validation emphasis because it gates launch and deployment safety checks
 - Clear primary CTA and minimal distractions
 
 ### Library
@@ -117,6 +125,14 @@ Alignment rules:
 - Dense table/list layout with active state clarity over ornament
 - Detail panel appears when a mod is selected
 - Visual emphasis goes to name, status, type, actions, and activation state
+- Library status filtering should live in the screen itself, below the selection guidance, not in the global header
+- Use local segmented controls for `All`, `Enabled`, and `Disabled`; `All` may use the cyber blue accent while activation-oriented controls should reuse the same squared button language as Browse and other path actions
+- Enable/disable-all control should read as a compact rectangular command block, not a toggle switch and not a rounded pill
+- Table sorting should be available from `Mod Name`, `Type`, and `Installed`
+- Sort icons should stay visually secondary and sit tight to the label without affecting the left alignment of the header text
+- Bulk actions should appear only when multiple mods are selected
+- Sort affordance should keep the entire header cell clickable, left align the label, and show only one active sorted column at a time
+- When the local status filter is `Enabled` or `Disabled`, the enable/disable-all control should be visibly disabled and explain that state through the shared tooltip treatment
 
 ### Downloads
 
@@ -130,6 +146,9 @@ Alignment rules:
 - Accessible as a full content view, not merely a hidden modal afterthought
 - Used for game path, library path, downloads path, and update preferences
 - Should feel operational and clear, not decorative
+- Core directories section should mirror the Welcome screen visual system: unified dark card, path blocks in monospace, compact status badges, and the same primary/secondary button treatment
+- Settings navigation should feel like an integrated extension panel: section tabs connected to the content surface rather than floating above it
+- Avoid nested scrolling inside Settings content when the main app surface already handles vertical scroll
 
 ## 5. Components
 
@@ -148,6 +167,11 @@ Secondary:
 Destructive:
 - Error-tinted text or border
 - Subtle red emphasis only on hover
+
+Tooltips:
+- Use a shared Hyperion tooltip component instead of browser-native `title` tooltips
+- Tooltip treatment should stay compact: dark surface, fine border, uppercase micro-label, restrained shadow
+- Disabled controls that need explanation should expose that explanation through the same shared tooltip component
 
 ### Toasts
 

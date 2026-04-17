@@ -16,6 +16,7 @@ interface ActionPromptDialogProps {
   onSecondary?: () => void
   onCancel: () => void
   submitting?: boolean
+  detailContent?: React.ReactNode
 }
 
 export const ActionPromptDialog: React.FC<ActionPromptDialogProps> = ({
@@ -34,6 +35,7 @@ export const ActionPromptDialog: React.FC<ActionPromptDialogProps> = ({
   onSecondary,
   onCancel,
   submitting = false,
+  detailContent,
 }) => {
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4">
@@ -49,10 +51,23 @@ export const ActionPromptDialog: React.FC<ActionPromptDialogProps> = ({
         </div>
 
         <p className="text-[#9a9a9a] text-sm leading-relaxed mb-3">{description}</p>
-        {detailLabel && detailValue && (
-          <p className="text-[#8a8a8a] text-[11px] font-mono uppercase tracking-[0.18em] mb-8">
-            {detailLabel}: {detailValue}
-          </p>
+        {(detailContent || (detailLabel && detailValue)) && (
+          <div className="mb-8 overflow-hidden rounded-sm border-[0.5px] border-[#2a2a2a] bg-[#0b0b0b] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+            <div
+              className="h-px w-full"
+              style={{ background: accentColor, boxShadow: `0 0 10px ${accentGlow}` }}
+            />
+            {detailContent ?? (
+              <div className="px-4 py-3">
+                <div className="text-[9px] font-mono uppercase tracking-[0.18em] text-[#7f7f7f]">
+                  {detailLabel}
+                </div>
+                <div className="mt-2 break-words text-[13px] font-medium tracking-[0.01em] text-white">
+                  {detailValue}
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         <div className="flex flex-col gap-3">

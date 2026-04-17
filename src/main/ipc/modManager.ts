@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron'
 import path from 'path'
 import fs from 'fs'
+import { v4 as uuidv4 } from 'uuid'
 import { IPC } from '../../shared/types'
 import type { ModMetadata, IpcResult, PurgeModsResult } from '../../shared/types'
 import { loadSettings } from '../settings'

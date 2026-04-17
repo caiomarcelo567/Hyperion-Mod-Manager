@@ -36,6 +36,10 @@ module.exports = {
           '0%':   { opacity: '0', transform: 'translateY(14px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        'firstrun-glow': {
+          '0%, 100%': { opacity: '0.55' },
+          '50%':      { opacity: '1' },
+        },
       },
       animation: {
         'settings-in': 'settings-in 0.28s ease-out both',
