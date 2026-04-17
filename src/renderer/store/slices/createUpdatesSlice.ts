@@ -46,6 +46,15 @@ export const createUpdatesSlice: StateCreator<UpdatesSlice, [], [], UpdatesSlice
       set({ updateError: errorMessage, updateDownloading: false })
       throw new Error(errorMessage)
     }
+
+    set((state) => ({
+      updateAvailable: true,
+      updateDownloaded: true,
+      updateDownloading: false,
+      updateProgress: 100,
+      updateError: null,
+      updateInfo: state.updateInfo,
+    }))
   },
 
   installUpdate: () => {
