@@ -44,6 +44,9 @@
 - Renderer update state lives in createUpdatesSlice.ts and header status lives in Header.tsx.
 - Current updater UX is single-step: one header button starts download, shows inline progress, then installs and relaunches without a second click.
 - Silent install behavior depends on src/main/updater.ts calling quitAndInstall with silent relaunch flags; if the NSIS wizard appears during auto-update, inspect that call first.
+- Windows installer should stay current-user only. Do not add an all-users/current-user selection screen; keep NSIS installing for the current user.
+- If first-install directory selection is needed, use assisted NSIS with a custom installer include that forces current-user mode instead of reverting to oneClick.
+
 
 ## UI Rules
 - Preserve the dark industrial Hyperion look: near-black surfaces, precise yellow accent, restrained shadows.
