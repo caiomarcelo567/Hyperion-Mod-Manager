@@ -42,7 +42,9 @@ export const createUpdatesSlice: StateCreator<UpdatesSlice, [], [], UpdatesSlice
     set({ updateDownloading: true, updateProgress: 0 })
     const result = await IpcService.invoke<IpcResult>(IPC.DOWNLOAD_UPDATE)
     if (!result.ok) {
-      set({ updateError: result.error ?? 'Could not download update', updateDownloading: false })
+      const errorMessage = result.error ?? 'Could not download update'
+      set({ updateError: errorMessage, updateDownloading: false })
+      throw new Error(errorMessage)
     }
   },
 

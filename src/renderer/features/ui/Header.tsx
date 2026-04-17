@@ -58,6 +58,12 @@ export const Header: React.FC = () => {
     return () => window.clearTimeout(timeoutId)
   }, [updateDownloaded, autoApplyUpdate, installUpdate, addToast])
 
+  useEffect(() => {
+    if (!updateError) return
+
+    addToast(updateError, 'error', 4200)
+  }, [updateError, addToast])
+
   const handleUpdateAction = async () => {
     if (updateDownloading) {
       return
