@@ -213,6 +213,26 @@ select,
   background: rgba(122, 114, 62, 0.95);
 }
 
+/* Scrollbar for delete-confirmation dialog: red to match DESIGN.md */
+.delete-dialog-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(248, 113, 113, 0.9) transparent; /* red-ish */
+}
+.delete-dialog-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+.delete-dialog-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.delete-dialog-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(248, 113, 113, 0.92);
+  border-radius: 999px;
+  border: 2px solid rgba(0,0,0,0.0);
+}
+.delete-dialog-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(248, 113, 113, 1);
+}
+
 .stable-scroll-gutter {
   scrollbar-gutter: stable;
 }

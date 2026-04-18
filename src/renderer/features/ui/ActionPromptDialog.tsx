@@ -38,7 +38,7 @@ export const ActionPromptDialog: React.FC<ActionPromptDialogProps> = ({
   detailContent,
 }) => {
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4">
+    <div data-action-prompt="true" className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4">
       <div className="bg-[#050505] border-[0.5px] border-[#222] shadow-[0_20px_50px_rgba(0,0,0,0.8)] w-full max-w-md p-8 relative">
         <div
           className="absolute top-0 left-0 w-full h-[2px]"

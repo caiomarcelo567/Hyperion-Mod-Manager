@@ -37,7 +37,10 @@ export const ModList: React.FC = () => {
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
   const contextMenuRef = useRef<HTMLDivElement>(null)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null)
+  const [selectionAnchorId, setSelectionAnchorId] = useState<string | null>(null)
+  const selectedIdsRef = useRef<string[]>([])
+  const selectionAnchorIdRef = useRef<string | null>(null)
+  const displayedModsRef = useRef<ModMetadata[]>([])
   const [pendingDeleteMod, setPendingDeleteMod] = useState<ModMetadata | null>(null)
   const [pendingAction, setPendingAction] = useState<PendingActionState | null>(null)
   const [detailOverlay, setDetailOverlay] = useState<DetailOverlayState | null>(null)
@@ -181,6 +184,10 @@ export const ModList: React.FC = () => {
     ? 'Unavailable while Enabled filter is active'
     : 'Unavailable while Disabled filter is active'
 
+  selectedIdsRef.current = selectedIds
+  selectionAnchorIdRef.current = selectionAnchorId
+  displayedModsRef.current = displayedMods
+
   const sortStateFor = (key: LibrarySortKey): 'ascending' | 'descending' | 'none' => {
     if (sortKey !== key) return 'none'
     return sortDirection === 'asc' ? 'ascending' : 'descending'
@@ -208,9 +215,10 @@ export const ModList: React.FC = () => {
       const target = event.target as HTMLElement | null
       if (target?.closest('[data-mod-row="true"]')) return
       if (target?.closest('[data-bulk-actions="true"]')) return
+      if (target?.closest('[data-action-prompt="true"]')) return
 
       setSelectedIds([])
-      setLastSelectedIndex(null)
+      setSelectionAnchorId(null)
       selectMod(null)
     }
 
@@ -231,7 +239,7 @@ export const ModList: React.FC = () => {
       event.preventDefault()
       const visibleIds = displayedMods.map((mod) => mod.uuid)
       setSelectedIds(visibleIds)
-      setLastSelectedIndex(visibleIds.length > 0 ? 0 : null)
+      setSelectionAnchorId(visibleIds[0] ?? null)
     }
 
     window.addEventListener('keydown', handleSelectAll)
@@ -352,35 +360,53 @@ export const ModList: React.FC = () => {
     el.style.top = `${y}px`
   }, [contextMenu])
 
-  const handleRowSelect = (event: React.MouseEvent, mod: ModMetadata, index: number) => {
+  const handleRowSelect = useCallback((event: React.MouseEvent, mod: ModMetadata, index: number) => {
     if (mod.kind !== 'mod') {
       selectMod(mod.uuid)
       return
     }
 
-    if (event.shiftKey && lastSelectedIndex !== null) {
-      const start = Math.min(lastSelectedIndex, index)
-      const end = Math.max(lastSelectedIndex, index)
-      const rangeIds = displayedMods
+    const currentDisplayedMods = displayedModsRef.current
+    const currentSelectedIds = selectedIdsRef.current
+    const currentSelectionAnchorId = selectionAnchorIdRef.current
+    const resolvedAnchorId = currentSelectionAnchorId ?? currentSelectedIds[0] ?? null
+    const anchorIndex = resolvedAnchorId
+      ? currentDisplayedMods.findIndex((item) => item.uuid === resolvedAnchorId)
+      : -1
+
+    if (event.shiftKey && anchorIndex >= 0) {
+      const start = Math.min(anchorIndex, index)
+      const end = Math.max(anchorIndex, index)
+      const rangeIds = currentDisplayedMods
         .slice(start, end + 1)
         .filter((item) => item.kind === 'mod')
         .map((item) => item.uuid)
 
+      selectedIdsRef.current = rangeIds
       setSelectedIds(rangeIds)
     } else if (event.ctrlKey || event.metaKey) {
       setSelectedIds((current) =>
-        current.includes(mod.uuid)
-          ? current.filter((id) => id !== mod.uuid)
-          : [...current, mod.uuid]
+        {
+          const next = current.includes(mod.uuid)
+            ? current.filter((id) => id !== mod.uuid)
+            : [...current, mod.uuid]
+          selectedIdsRef.current = next
+          return next
+        }
       )
-      setLastSelectedIndex(index)
+      if (!currentSelectionAnchorId && currentSelectedIds.length === 0) {
+        selectionAnchorIdRef.current = mod.uuid
+        setSelectionAnchorId(mod.uuid)
+      }
     } else {
+      selectedIdsRef.current = [mod.uuid]
+      selectionAnchorIdRef.current = mod.uuid
       setSelectedIds([mod.uuid])
-      setLastSelectedIndex(index)
+      setSelectionAnchorId(mod.uuid)
     }
 
     selectMod(mod.uuid)
-  }
+  }, [selectMod])
 
   const runBulkToggle = useCallback(async (modIds: string[], target: 'enable' | 'disable') => {
     const actionableIds = modIds.filter((id) => {
@@ -436,7 +462,7 @@ export const ModList: React.FC = () => {
     setSubmittingAction(false)
     setPendingAction(null)
     setSelectedIds([])
-    setLastSelectedIndex(null)
+    setSelectionAnchorId(null)
 
     if (removed > 0) {
       addToast(`${removed} mod${removed === 1 ? '' : 's'} deleted from the library`, 'success')
@@ -454,7 +480,6 @@ export const ModList: React.FC = () => {
       return
     }
 
-    setPendingAction(null)
     setSubmittingAction(true)
     let removed = 0
     let failed = 0
@@ -471,7 +496,7 @@ export const ModList: React.FC = () => {
     setSubmittingAction(false)
     setPendingAction(null)
     setSelectedIds([])
-    setLastSelectedIndex(null)
+    setSelectionAnchorId(null)
 
     if (removed > 0) {
       addToast(`${removed} mod${removed === 1 ? '' : 's'} deleted from selection`, 'success')
@@ -885,8 +910,8 @@ export const ModList: React.FC = () => {
                   {pendingAction.count} selected
                 </div>
               </div>
-              <div className="mt-3 space-y-2">
-                {selectedModsPreview.map((mod) => (
+              <div className="delete-dialog-scrollbar mt-3 max-h-[248px] space-y-2 overflow-y-auto pr-1">
+                {selectedMods.map((mod) => (
                   <div
                     key={mod.uuid}
                     className="rounded-sm border-[0.5px] border-[#2c1515] bg-[#120909] px-3 py-2 text-[12px] text-[#ffe1e1] shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]"
@@ -894,11 +919,6 @@ export const ModList: React.FC = () => {
                     {mod.name}
                   </div>
                 ))}
-                {selectedMods.length > selectedModsPreview.length && (
-                  <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-[#8d8d8d]">
-                    + {selectedMods.length - selectedModsPreview.length} more mod(s)
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -938,7 +958,7 @@ export const ModList: React.FC = () => {
             <button
               onClick={() => {
                 setSelectedIds([])
-                setLastSelectedIndex(null)
+                setSelectionAnchorId(null)
                 selectMod(null)
               }}
               className="flex h-10 w-10 items-center justify-center rounded-sm border-[0.5px] border-[#242424] bg-[#0b0b0b] text-[#8a8a8a] transition-colors hover:border-[#5d5d5d] hover:text-white"

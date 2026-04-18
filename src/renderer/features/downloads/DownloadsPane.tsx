@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { useAppStore } from '../../store/useAppStore'
 import { IpcService } from '../../services/IpcService'
-import type { DownloadEntry, IpcResult } from '@shared/types'
+import type { DownloadEntry, IpcResult, ModMetadata } from '@shared/types'
 import { IPC } from '@shared/types'
 import { ActionPromptDialog } from '../ui/ActionPromptDialog'
 import { Tooltip } from '../ui/Tooltip'
@@ -20,6 +20,28 @@ const formatDate = (value: string): string => {
   const hh = String(date.getHours()).padStart(2, '0')
   const min = String(date.getMinutes()).padStart(2, '0')
   return `${yyyy}-${mm}-${dd} ${hh}:${min}`
+}
+
+const copySuffixPattern = /\sCopy(?:\s\d+)?$/i
+
+const isCopyVariant = (name: string): boolean => copySuffixPattern.test(name.trim())
+
+const getInstalledTimestamp = (installedAt?: string): number => {
+  if (!installedAt) return Number.POSITIVE_INFINITY
+
+  const timestamp = Date.parse(installedAt)
+  return Number.isNaN(timestamp) ? Number.POSITIVE_INFINITY : timestamp
+}
+
+const shouldPreferReinstallTarget = (candidate: ModMetadata, current: ModMetadata): boolean => {
+  const candidateIsCopy = isCopyVariant(candidate.name)
+  const currentIsCopy = isCopyVariant(current.name)
+
+  if (candidateIsCopy !== currentIsCopy) {
+    return !candidateIsCopy
+  }
+
+  return getInstalledTimestamp(candidate.installedAt) < getInstalledTimestamp(current.installedAt)
 }
 
 export const DownloadsPane: React.FC = () => {
@@ -63,10 +85,15 @@ export const DownloadsPane: React.FC = () => {
 
   const latestDownloads = useMemo(() => downloads.slice(0, 16), [downloads])
   const installedBySourcePath = useMemo(() => {
-    const map = new Map<string, (typeof mods)[number]>()
+    const map = new Map<string, ModMetadata>()
     for (const mod of mods) {
       if (mod.kind !== 'mod' || !mod.sourcePath) continue
-      map.set(mod.sourcePath.toLowerCase(), mod)
+
+      const sourcePathKey = mod.sourcePath.toLowerCase()
+      const existing = map.get(sourcePathKey)
+      if (!existing || shouldPreferReinstallTarget(mod, existing)) {
+        map.set(sourcePathKey, mod)
+      }
     }
     return map
   }, [mods])
